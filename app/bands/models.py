@@ -11,7 +11,7 @@ class City(models.Model):
 class Instrument(models.Model):
     name = models.CharField(max_length=50)
     category = models.ForeignKey('InstrumentCategory', on_delete=models.SET_NULL,
-                                 related_name='instruments')
+                                 related_name='instruments', null=True)
 
 
 class InstrumentCategory(models.Model):
