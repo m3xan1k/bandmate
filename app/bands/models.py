@@ -7,19 +7,43 @@ from django.dispatch import receiver
 class City(models.Model):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return f'<City: {self.name}>'
+
+    def __repr__(self):
+        return f'<City: {self.name}>'
+
 
 class Instrument(models.Model):
     name = models.CharField(max_length=50)
     category = models.ForeignKey('InstrumentCategory', on_delete=models.SET_NULL,
                                  related_name='instruments', null=True)
 
+    def __str__(self):
+        return f'<Instrument: {self.name}>'
+
+    def __repr__(self):
+        return f'<Instrument: {self.name}>'
+
 
 class InstrumentCategory(models.Model):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return f'<InstrumentCategory: {self.name}>'
+
+    def __repr__(self):
+        return f'<InstrumentCategory: {self.name}>'
+
 
 class Style(models.Model):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f'<Style: {self.name}>'
+
+    def __repr__(self):
+        return f'<Style: {self.name}>'
 
 
 class Musician(models.Model):
@@ -33,6 +57,15 @@ class Musician(models.Model):
                              related_name='musicians', null=True)
     bands = models.ManyToManyField('Band', related_name='musicians')
 
+    def representation_name(self):
+        return f'{self.first_name} {self.user.username} {self.last_name}'
+
+    def __str__(self):
+        return f'<Musician: {self.representation_name}>'
+
+    def __repr__(self):
+        return f'<Musician: {self.representation_name}>'
+
 
 class Band(models.Model):
     name = models.CharField(max_length=255, blank=True)
@@ -40,6 +73,12 @@ class Band(models.Model):
     description = models.TextField(blank=True)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='bands', null=True)
+
+    def __str__(self):
+        return f'<Band: {self.name} id: {self.id}>'
+
+    def __repr__(self):
+        return f'<Band: {self.name} id: {self.id}>'
 
 
 @receiver(post_save, sender=User)
