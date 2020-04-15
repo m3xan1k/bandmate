@@ -56,6 +56,7 @@ class Musician(models.Model):
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='musicians', null=True)
     bands = models.ManyToManyField('Band', related_name='musicians')
+    instruments = models.ManyToManyField('Instrument', related_name='musicians')
 
     def representation_name(self):
         return f'{self.first_name} username: {self.user.username} {self.last_name}'.strip()
