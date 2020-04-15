@@ -109,6 +109,19 @@ class TestBands(TestCase):
         pass
 
     @staticmethod
+    def test_representation():
+        assert City.objects.first().__str__() == '<City: city_0>'
+        assert Instrument.objects.last().__str__() == '<Instrument: instrument_3>'
+        musician = Musician.objects.filter(user__username='user_0').first()
+        musician.first_name = 'John'
+        musician.last_name = 'Doe'
+        assert musician.__str__() == '<Musician: John username: user_0 Doe>'
+        assert Band.objects.first().__str__() == '<Band: band_0 id: 1>'
+        assert Style.objects.last().__str__() == '<Style: style_1>'
+        category = InstrumentCategory.objects.last()
+        assert category.__str__() == '<InstrumentCategory: instrument_category_1>'
+
+    @staticmethod
     def test_city_creation():
         city_0 = City.objects.first()
         city_1 = City.objects.last()

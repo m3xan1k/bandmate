@@ -58,13 +58,13 @@ class Musician(models.Model):
     bands = models.ManyToManyField('Band', related_name='musicians')
 
     def representation_name(self):
-        return f'{self.first_name} {self.user.username} {self.last_name}'
+        return f'{self.first_name} username: {self.user.username} {self.last_name}'.strip()
 
     def __str__(self):
-        return f'<Musician: {self.representation_name}>'
+        return f'<Musician: {self.representation_name()}>'
 
     def __repr__(self):
-        return f'<Musician: {self.representation_name}>'
+        return f'<Musician: {self.representation_name()}>'
 
 
 class Band(models.Model):
