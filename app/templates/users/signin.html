@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if form.errors %}
+    {% for error in form.errors %}
+        <div class="danger">{{ error }}</div>
+    {% endfor %}
+{% endif %}
+
+<form action="{% url 'signin_view' %}" method="post">
+
+    {% for field in form %}
+    
+        <div class="form-group">
+            {{ field.label }}
+            {{ field }}
+        </div>
+
+    {% endfor %}
+    {% csrf_token %}
+    <input type="submit" value="Sign In">
+
+</form>
+
+{% endblock content %}
+
+{% endblock content %}
