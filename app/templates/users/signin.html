@@ -2,10 +2,6 @@
 
 {% block content %}
 
-{% extends "base.html" %}
-
-{% block content %}
-
 {% if form.errors %}
     {% for error in form.errors %}
         <div class="danger">{{ error }}</div>
@@ -26,7 +22,5 @@
     <input type="submit" value="Sign In">
 
 </form>
-
-{% endblock content %}
 
 {% endblock content %}
