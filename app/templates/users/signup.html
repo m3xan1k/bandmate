@@ -8,7 +8,7 @@
     {% endfor %}
 {% endif %}
 
-<form action="{% url 'signup_view' %}" method="post">
+<form action="{% url 'signup' %}" method="post">
 
     {% for field in form %}
     
@@ -19,7 +19,7 @@
 
     {% endfor %}
     {% csrf_token %}
-    <input type="submit" value="Sign Up">
+    <input type="submit" value="SignUp">
 
 </form>
 

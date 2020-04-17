@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib import auth
 from django.urls import reverse
 
-from users.views import SingUpView, SignInView, DashboardView
+from users.views import SingUpView, LogInView, DashboardView
 
 
 class TestSignUp(TestCase):
@@ -22,8 +22,10 @@ class TestSignUp(TestCase):
 
     def test_sign_up(self):
         request_data = {
+            'email': 'test@email.com',
             'username': 'test_user',
             'password': 'test_password',
+            'confirm_password': 'test_password',
         }
         response: HttpResponse = self.client.post(self.SIGNUP_URL,
                                                   request_data)
@@ -34,6 +36,7 @@ class TestSignUp(TestCase):
         new_user: User = User.objects.first()
         self.assertEqual(new_user.username, 'test_user')
         self.assertFalse(new_user.is_staff)
+        self.assertFalse(new_user.is_superuser)
         self.assertTrue(new_user.is_active)
 
     def test_sign_up_empty_password(self):
@@ -50,10 +53,23 @@ class TestSignUp(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.count(), 0)
 
+    def test_sign_up_empty_email(self):
+        request_data = {
+            'username': 'test_user',
+            'password': 'test_password',
+            'confirm_password': 'test_password',
+        }
+        response: HttpResponse = self.client.post(self.SIGNUP_URL,
+                                                  request_data)
+        self.assertTemplateUsed(response, 'users/signup.html')
 
-class TestSignIn(TestCase):
+        User = get_user_model()
+        self.assertEqual(User.objects.count(), 0)
 
-    SIGNIN_URL = reverse(SignInView.name)
+
+class TestLogIn(TestCase):
+
+    LOGIN_URL = reverse(LogInView.name)
 
     @classmethod
     def setUpClass(cls):
@@ -69,13 +85,13 @@ class TestSignIn(TestCase):
         User.objects.all().delete()
 
     def test_get_sign_in(self):
-        response = self.client.get(self.SIGNIN_URL)
+        response = self.client.get(self.LOGIN_URL)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed('users/signin.html')
+        self.assertTemplateUsed('users/login.html')
 
     def test_post_sign_in(self):
         response = self.client.post(
-            path=self.SIGNIN_URL,
+            path=self.LOGIN_URL,
             data={
                 'username': 'test_user',
                 'password': 'test_password',

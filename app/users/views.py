@@ -5,12 +5,12 @@ from django.template.response import TemplateResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
-from users.forms import SignUpForm
+from users.forms import SignUpForm, LogInForm
 
 
 class SingUpView(View):
 
-    name = 'signup_view'
+    name = 'signup'
 
     def get(self, request: HttpRequest) -> TemplateResponse:
         form = SignUpForm()
@@ -20,24 +20,26 @@ class SingUpView(View):
         form = SignUpForm(request.POST)
         if form.is_valid():
             form_data = form.cleaned_data
-            User.objects.create_user(
+            new_user = User(
                 username=form_data['username'],
-                password=form_data['password'],
+                email=form_data['email'],
             )
+            new_user.set_password(form_data['password'])
+            new_user.save()
             return redirect('dashboard_view')
         return render(request, 'users/signup.html', {'form': form})
 
 
-class SignInView(View):
+class LogInView(View):
 
-    name = 'signin_view'
+    name = 'login'
 
     def get(self, request: HttpRequest) -> TemplateResponse:
-        form = SignUpForm()
-        return render(request, 'users/signin.html', {'form': form})
+        form = LogInForm()
+        return render(request, 'users/login.html', {'form': form})
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        form = SignUpForm(request.POST)
+        form = LogInForm(request.POST)
         if form.is_valid():
             form_data = form.cleaned_data
             username = form_data['username']
