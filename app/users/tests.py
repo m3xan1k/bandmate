@@ -30,7 +30,7 @@ class TestSignUp(TestCase):
         response: HttpResponse = self.client.post(self.SIGNUP_URL,
                                                   request_data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse(DashboardView.name))
+        self.assertRedirects(response, reverse(LogInView.name))
 
         User = get_user_model()
         new_user: User = User.objects.first()
@@ -101,3 +101,41 @@ class TestLogIn(TestCase):
         self.assertTrue(user.is_authenticated)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse(DashboardView.name))
+
+
+class TestDashboard(TestCase):
+
+    DASHBOARD_URL = reverse(DashboardView.name)
+
+    @classmethod
+    def setUpClass(cls):
+        User = get_user_model()
+        User.objects.create_user(
+            username='test_user',
+            password='test_password',
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        User = get_user_model()
+        User.objects.all().delete()
+
+    def test_unauthorized_access(self):
+        response: HttpResponse = self.client.get(self.DASHBOARD_URL)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            reverse(LogInView.name) + f'?next={self.DASHBOARD_URL}',
+        )
+
+    def test_authorized_access(self):
+        self.client.post(
+            path=reverse(LogInView.name),
+            data={
+                'username': 'test_user',
+                'password': 'test_password',
+            }
+        )
+        response: HttpResponse = self.client.get(self.DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('users/dashboard.html')

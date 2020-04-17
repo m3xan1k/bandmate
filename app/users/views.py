@@ -1,9 +1,10 @@
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, redirect, HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.http.request import HttpRequest
 from django.template.response import TemplateResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from users.forms import SignUpForm, LogInForm
 
@@ -26,7 +27,7 @@ class SingUpView(View):
             )
             new_user.set_password(form_data['password'])
             new_user.save()
-            return redirect('dashboard_view')
+            return redirect('login')
         return render(request, 'users/signup.html', {'form': form})
 
 
@@ -53,9 +54,19 @@ class LogInView(View):
         return redirect('dashboard_view')
 
 
-class DashboardView(View):
+class LogOutView(View):
+
+    name = 'logout'
+
+    def get(self, request: HttpRequest) -> HttpResponseRedirect:
+        logout(request)
+        return redirect('login')
+
+
+class DashboardView(LoginRequiredMixin, View):
 
     name = 'dashboard_view'
+    login_url = '/users/login/'
 
     def get(self, request: HttpRequest) -> HttpResponse:
         return HttpResponse(b'<h1>Dashboard</h1>')
