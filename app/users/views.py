@@ -53,6 +53,8 @@ class LogInView(View):
                 if user.is_active:
                     login(request, user)
 
+            # TODO: exceptions and flash messages if user is not active or None
+
         return redirect('dashboard_view')
 
 
