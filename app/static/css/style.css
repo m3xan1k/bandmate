@@ -1,0 +1,15 @@
+.bg-dark-blue {
+    background-color: #303c6c;
+}
+
+* {
+    font-family: 'Open Sans', Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.logo {
+    font-family: 'Megrim';
+}
