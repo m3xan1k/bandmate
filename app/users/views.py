@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from users.forms import SignUpForm, LogInForm, PasswordChangeForm
+from bands.views import DashboardView
 
 
 class SingUpView(View):
@@ -55,7 +56,7 @@ class LogInView(View):
 
             # TODO: exceptions and flash messages if user is not active or None
 
-        return redirect('dashboard_view')
+        return redirect(DashboardView.name)
 
 
 class LogOutView(View):
@@ -91,12 +92,3 @@ class PasswordChangeView(LoginRequiredMixin, View):
 
             return render(request, 'users/password_change.html', {'form': form})
         return render(request, 'users/password_change.html', {'form': form})
-
-
-class DashboardView(LoginRequiredMixin, View):
-
-    name = 'dashboard_view'
-    login_url = '/users/login/'
-
-    def get(self, request: HttpRequest) -> HttpResponse:
-        return HttpResponse(b'<h1>Dashboard</h1>')

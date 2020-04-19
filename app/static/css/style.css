@@ -22,6 +22,26 @@
     color: #fbe8a6;
 }
 
+.bg-middle-blue {
+    background-color: #b4def5;
+}
+
+.middle-blue {
+    color: #b4def5;
+}
+
+.bg-orange {
+    background-color: #f4976c;
+}
+
+.orange {
+    color: #f4976c;
+}
+
+.mybtn:hover {
+    background-color: aliceblue;
+}
+
 * {
     font-family: 'Open Sans', Helvetica, sans-serif;
 }

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} | Dashboard
+{% endblock title %}
+
+{% block content %}
+
+<h1 class="text-center mb-5">Dashboard</h1>
+
+<table class="table table-borderless col-6 justify-content-center mx-auto">
+  <tbody>
+    <tr>
+      <td>Username</td>
+      <td>{{ user.username }}</td>
+    </tr>
+    <tr>
+      <td>First Name</td>
+      <td>{{ user.first_name }}</td>
+    </tr>
+    <tr>
+      <td>Last Name</td>
+      <td>{{ user.last_name }}</td>
+    </tr>
+    <tr>
+      <td>Birth Date</td>
+      <td>{{ user.musician.birth_date }}</td>
+    </tr>
+    <tr>
+      <td>City</td>
+      <td>{{ user.musician.city }}</td>
+    </tr>
+    <tr>
+      <td>Is Busy</td>
+      <td>{{ user.musician.is_busy }}</td>
+    </tr>
+    <tr>
+      <td>Bands</td>
+      <td>
+        {% for band in user.musicians.bands.all %}
+            <a href="#">{{ band.name }}</a>
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Instruments</td>
+      <td>
+        {% for instrument in user.musician.bands.all %}
+            <h6>{{ instrument.name }}</h6>
+        {% endfor %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+{% endblock content %}

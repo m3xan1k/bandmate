@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<h1 class="text-center mb-5">SignUp</h1>
+
 {% if form.errors %}
     {% for error in form.errors %}
         <div class="danger">{{ error }}</div>
@@ -19,7 +21,7 @@
 
     {% endfor %}
     {% csrf_token %}
-    <input type="submit" value="SignUp">
+    <input class="btn bg-light-blue mybtn" type="submit" value="SignUp">
 
 </form>
 
