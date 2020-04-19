@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.shortcuts import render, redirect, HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.http.request import HttpRequest
@@ -6,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from users.forms import SignUpForm, LogInForm
+from users.forms import SignUpForm, LogInForm, PasswordChangeForm
 
 
 class SingUpView(View):
@@ -27,7 +29,7 @@ class SingUpView(View):
             )
             new_user.set_password(form_data['password'])
             new_user.save()
-            return redirect('login')
+            return redirect(LogInView.name)
         return render(request, 'users/signup.html', {'form': form})
 
 
@@ -60,7 +62,33 @@ class LogOutView(View):
 
     def get(self, request: HttpRequest) -> HttpResponseRedirect:
         logout(request)
-        return redirect('login')
+        return redirect(LogInView.name)
+
+
+class PasswordChangeView(LoginRequiredMixin, View):
+
+    name = 'password_change'
+    login_url = '/users/login/'
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        form = PasswordChangeForm()
+        return render(request, 'users/password_change.html', {'form': form})
+
+    def post(self, request: HttpRequest) -> Union[HttpResponseRedirect,
+                                                  HttpResponse]:
+        form = PasswordChangeForm(request.POST)
+        if form.is_valid():
+            form_data = form.cleaned_data
+            user: User = User.objects.filter(username=request.user).first()
+            if user.check_password(form_data['old_password']):
+                user.set_password(form_data['password'])
+                user.save()
+                return redirect(LogInView.name)
+
+            # TODO: make flash message about wrong password
+
+            return render(request, 'users/password_change.html', {'form': form})
+        return render(request, 'users/password_change.html', {'form': form})
 
 
 class DashboardView(LoginRequiredMixin, View):
