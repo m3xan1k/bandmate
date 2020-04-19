@@ -4,6 +4,6 @@ from bands import views
 
 
 urlpatterns = [
-    path('user_dashboard/', views.DashboardView.as_view(),
-         name=views.DashboardView.name),
+    path('user_dashboard/', views.UserDashboardView.as_view(),
+         name=views.UserDashboardView.name),
 ]

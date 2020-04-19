@@ -1,11 +1,16 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.shortcuts import reverse
 import factory
 
 from bands.models import (
     City, InstrumentCategory, Instrument, Style,
     Musician, Band,
 )
+from bands.views import (
+    UserDashboardView,
+)
+from users.views import LogInView
 
 
 class CityFactory(factory.DjangoModelFactory):
@@ -148,3 +153,32 @@ class TestBands(TestCase):
         assert instrument_2.category.name == 'instrument_category_1'
         assert instrument_2.musicians.count() == 1
         assert instrument_2.musicians.first().user.username == 'user_2'
+
+
+class TestDashboard(TestCase):
+
+    DASHBOARD_URL = reverse(UserDashboardView.name)
+    LOGIN_URL = reverse(LogInView.name)
+
+    def setUp(self):
+        email = 'test@test.ru'
+        username = 'test_username'
+        password = 'test_password'
+        User.objects.create_user(
+            email=email,
+            username=username,
+            password=password,
+        )
+
+    def tearDown(self):
+        User.objects.all().delete()
+
+    def test_get_dashboard(self):
+        login_data = {
+            'username': 'test_username',
+            'password': 'test_password',
+        }
+        self.client.post(self.LOGIN_URL, data=login_data)
+        response = self.client.get(self.DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/user_dashboard.html')

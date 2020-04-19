@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 
 
-class DashboardView(LoginRequiredMixin, View):
+class UserDashboardView(LoginRequiredMixin, View):
 
     name = 'dashbord'
     login_url = '/users/login/'

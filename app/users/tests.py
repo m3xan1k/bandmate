@@ -6,9 +6,10 @@ from django.contrib import auth
 from django.urls import reverse
 
 from users.views import (
-    SingUpView, LogInView, DashboardView, LogOutView,
+    SingUpView, LogInView, LogOutView,
     PasswordChangeView,
 )
+from bands.views import UserDashboardView
 
 
 class TestSignUp(TestCase):
@@ -104,7 +105,7 @@ class TestLogIn(TestCase):
         user = auth.get_user(self.client)
         self.assertTrue(user.is_authenticated)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse(DashboardView.name))
+        self.assertRedirects(response, reverse(UserDashboardView.name))
 
     def test_logout(self):
         self.client.post(
@@ -125,7 +126,7 @@ class TestPasswordChange(TestCase):
     LOGIN_URL = reverse(LogInView.name)
     LOGOUT_URL = reverse(LogOutView.name)
     PASSWORD_CHANGE_URL = reverse(PasswordChangeView.name)
-    DASHBOARD_URL = reverse(DashboardView.name)
+    DASHBOARD_URL = reverse(UserDashboardView.name)
 
     def setUp(self):
         User = get_user_model()
@@ -187,7 +188,7 @@ class TestPasswordChange(TestCase):
 
 class TestDashboard(TestCase):
 
-    DASHBOARD_URL = reverse(DashboardView.name)
+    DASHBOARD_URL = reverse(UserDashboardView.name)
 
     @classmethod
     def setUpClass(cls):

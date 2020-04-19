@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from users.forms import SignUpForm, LogInForm, PasswordChangeForm
-from bands.views import DashboardView
+from bands.views import UserDashboardView
 
 
 class SingUpView(View):
@@ -56,7 +56,7 @@ class LogInView(View):
 
             # TODO: exceptions and flash messages if user is not active or None
 
-        return redirect(DashboardView.name)
+        return redirect(UserDashboardView.name)
 
 
 class LogOutView(View):
