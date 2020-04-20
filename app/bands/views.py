@@ -30,7 +30,7 @@ class ProfileEditView(LoginRequiredMixin, View):
 
     def get(self, request: HttpRequest) -> TemplateResponse:
         musician = Musician.objects.filter(user=request.user).first()
-        form = self.form(musician.__dict__)
+        form = self.form(instance=musician)
         return render(request, 'bands/profile_edit.html', {'form': form})
 
     def post(self, request: HttpRequest) -> HttpResponseRedirect:
@@ -41,10 +41,9 @@ class ProfileEditView(LoginRequiredMixin, View):
             for field in form_data:
                 try:
                     setattr(musician, field, form_data[field])
-                # exception for m2m fields
+                # exception for instruments
                 except TypeError:
-                    for item in form_data[field]:
-                        setattr(musician, field, [item, ])
+                    musician.instruments.set(form_data[field])
             musician.save()
             messages.success(request, 'Profile saved')
             return redirect(UserDashboardView.name)

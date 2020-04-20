@@ -8,7 +8,7 @@ class City(models.Model):
     name = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'<City: {self.name}>'
+        return f'{self.name}'
 
     def __repr__(self):
         return f'<City: {self.name}>'
@@ -20,7 +20,7 @@ class Instrument(models.Model):
                                  related_name='instruments', null=True)
 
     def __str__(self):
-        return f'<Instrument: {self.name}>'
+        return f'{self.name}'
 
     def __repr__(self):
         return f'<Instrument: {self.name}>'
@@ -30,7 +30,7 @@ class InstrumentCategory(models.Model):
     name = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'<InstrumentCategory: {self.name}>'
+        return f'{self.name}'
 
     def __repr__(self):
         return f'<InstrumentCategory: {self.name}>'
@@ -40,7 +40,7 @@ class Style(models.Model):
     name = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'<Style: {self.name}>'
+        return f'{self.name}'
 
     def __repr__(self):
         return f'<Style: {self.name}>'
@@ -59,10 +59,10 @@ class Musician(models.Model):
     instruments = models.ManyToManyField('Instrument', related_name='musicians')
 
     def representation_name(self):
-        return f'{self.first_name} username: {self.user.username} {self.last_name}'.strip()
+        return f'{self.first_name} {self.user.username} {self.last_name}'.strip()
 
     def __str__(self):
-        return f'<Musician: {self.representation_name()}>'
+        return f'{self.representation_name()}'
 
     def __repr__(self):
         return f'<Musician: {self.representation_name()}>'
@@ -76,7 +76,7 @@ class Band(models.Model):
                              related_name='bands', null=True)
 
     def __str__(self):
-        return f'<Band: {self.name} id: {self.id}>'
+        return f'{self.name}'
 
     def __repr__(self):
         return f'<Band: {self.name} id: {self.id}>'

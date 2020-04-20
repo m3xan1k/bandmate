@@ -28,7 +28,7 @@
     </tr>
     <tr>
       <td>City</td>
-      <td>{{ user.musician.city }}</td>
+      <td>{{ user.musician.city.name }}</td>
     </tr>
     <tr>
       <td>Is Busy</td>
@@ -41,8 +41,8 @@
     <tr>
       <td>Instruments</td>
       <td>
-        {% for instrument in user.musician.bands.all %}
-            <h6>{{ instrument.name }}</h6>
+        {% for instrument in user.musician.instruments.all %}
+            <p>{{ instrument.name }}</p>
         {% endfor %}
       </td>
     </tr>

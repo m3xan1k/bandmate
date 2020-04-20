@@ -113,20 +113,25 @@ class TestBandsModels(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        City.objects.all().delete()
+        Instrument.objects.all().delete()
+        InstrumentCategory.objects.all().delete()
+        Musician.objects.all().delete()
+        Band.objects.all().delete()
+        Style.objects.all().delete()
 
     @staticmethod
-    def test_representation():
-        assert City.objects.first().__str__() == '<City: city_0>'
-        assert Instrument.objects.last().__str__() == '<Instrument: instrument_3>'
+    def test_stringify():
+        assert City.objects.first().__str__() == 'city_0'
+        assert Instrument.objects.last().__str__() == 'instrument_3'
         musician = Musician.objects.filter(user__username='user_0').first()
         musician.first_name = 'John'
         musician.last_name = 'Doe'
-        assert musician.__str__() == '<Musician: John username: user_0 Doe>'
-        assert Band.objects.first().__str__() == '<Band: band_0 id: 1>'
-        assert Style.objects.last().__str__() == '<Style: style_1>'
+        assert musician.__str__() == 'John user_0 Doe'
+        assert Band.objects.first().__str__() == 'band_0'
+        assert Style.objects.last().__str__() == 'style_1'
         category = InstrumentCategory.objects.last()
-        assert category.__str__() == '<InstrumentCategory: instrument_category_1>'
+        assert category.__str__() == 'instrument_category_1'
 
     @staticmethod
     def test_city_creation():
@@ -243,4 +248,17 @@ class TestProfileView(TestCase):
         self.assertEqual(musician.birth_date.strftime('%Y-%m-%d'), '1988-04-17')
 
     def test_post_profile_edit_relations(self):
-        pass
+        city = City.objects.create(name='Moscow')
+        instrument = Instrument.objects.create(name='Guitar')
+        profile_data = {
+            'city': city.id,
+            'instruments': (instrument.id, ),
+        }
+        response: HttpResponse = self.client.post(self.PROFILE_EDIT_URL, data=profile_data)
+        self.assertTrue(response.status_code, 302)
+        self.assertRedirects(response, self.DASHBOARD_URL)
+
+        user: User = auth.get_user(self.client)
+        self.assertEqual(user.musician.city.name, 'Moscow')
+        self.assertEqual(user.musician.instruments.count(), 1)
+        self.assertEqual(user.musician.instruments.all()[0].name, 'Guitar')

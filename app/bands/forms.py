@@ -1,9 +1,9 @@
 from django import forms
 
-from bands.models import City, Instrument
+from bands.models import Musician, City, Instrument
 
 
-class MusicianProfileForm(forms.Form):
+class MusicianProfileForm(forms.ModelForm):
     first_name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
     last_name = forms.CharField(
@@ -20,3 +20,8 @@ class MusicianProfileForm(forms.Form):
         help_text='May select multiple', required=False, queryset=Instrument.objects.all())
     bio = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control'}), required=False)
+
+    class Meta:
+        model = Musician
+        fields = ('first_name', 'last_name', 'birth_date',
+                  'city', 'is_busy', 'instruments', 'bio')
