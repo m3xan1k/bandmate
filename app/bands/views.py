@@ -3,6 +3,7 @@ from django.http import HttpRequest, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.contrib import messages
 
 from bands.forms import MusicianProfileForm
 from bands.models import Musician
@@ -41,5 +42,6 @@ class ProfileEditView(LoginRequiredMixin, View):
                     for item in form_data[field]:
                         setattr(musician, field, [item, ])
             musician.save()
+            messages.success(request, 'Profile saved')
             return redirect(UserDashboardView.name)
         return render(request, 'bands/profile_edit.html', {'form': form})
