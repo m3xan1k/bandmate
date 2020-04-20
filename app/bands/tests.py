@@ -227,7 +227,7 @@ class TestProfileView(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f'{self.LOGIN_URL}?next={self.PROFILE_EDIT_URL}')
 
-    def test_post_profile_edit(self):
+    def test_post_profile_edit_name_date(self):
         profile_data = {
             'first_name': 'John',
             'last_name': 'Doe',
@@ -240,4 +240,7 @@ class TestProfileView(TestCase):
         musician = Musician.objects.filter(user=user).first()
         self.assertEqual(musician.first_name, 'John')
         self.assertEqual(musician.last_name, 'Doe')
-        print(musician.birth_date)
+        self.assertEqual(musician.birth_date, '1988-04-17')
+
+    def test_post_profile_edit_relations(self):
+        pass

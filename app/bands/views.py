@@ -24,7 +24,9 @@ class ProfileEditView(LoginRequiredMixin, View):
     form = MusicianProfileForm
 
     def get(self, request: HttpRequest) -> TemplateResponse:
-        return render(request, 'bands/profile_edit.html', {'form': self.form()})
+        musician = Musician.objects.filter(user=request.user).first()
+        form = self.form(musician.__dict__)
+        return render(request, 'bands/profile_edit.html', {'form': form})
 
     def post(self, request: HttpRequest) -> HttpResponseRedirect:
         form = self.form(request.POST)
