@@ -240,7 +240,7 @@ class TestProfileView(TestCase):
         musician = Musician.objects.filter(user=user).first()
         self.assertEqual(musician.first_name, 'John')
         self.assertEqual(musician.last_name, 'Doe')
-        self.assertEqual(musician.birth_date, '1988-04-17')
+        self.assertEqual(musician.birth_date.strftime('%Y-%m-%d'), '1988-04-17')
 
     def test_post_profile_edit_relations(self):
         pass
