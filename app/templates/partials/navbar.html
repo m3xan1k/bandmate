@@ -11,7 +11,9 @@
                     <a class="nav-link" href="{% url 'home_view' %}">Home</a>
                 </li>
                 {% if user.is_authenticated %}
-                <li class="nav-item {% if request.resolver_match_url.url_name == 'dashboard' %}active{% endif %}"></li>
+                <li class="nav-item {% if request.resolver_match_url.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'user_dashboard' %}" class="nav-link">Dashboard</a>
+                </li>
                 <li class="nav-item">
                     <a href="{% url 'logout' %}" class="nav-link">LogOut</a>
                 </li>

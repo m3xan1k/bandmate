@@ -48,6 +48,8 @@ class Style(models.Model):
 
 class Musician(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=50, blank=True)
+    last_name = models.CharField(max_length=50, blank=True)
     bio = models.TextField(blank=True)
     birth_date = models.DateField(null=True, blank=True)
     is_busy = models.BooleanField(default=False, null=False, blank=False)

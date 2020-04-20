@@ -16,11 +16,11 @@
     </tr>
     <tr>
       <td>First Name</td>
-      <td>{{ user.first_name }}</td>
+      <td>{{ user.musician.first_name }}</td>
     </tr>
     <tr>
       <td>Last Name</td>
-      <td>{{ user.last_name }}</td>
+      <td>{{ user.musician.last_name }}</td>
     </tr>
     <tr>
       <td>Birth Date</td>
@@ -32,15 +32,11 @@
     </tr>
     <tr>
       <td>Is Busy</td>
-      <td>{{ user.musician.is_busy }}</td>
-    </tr>
-    <tr>
-      <td>Bands</td>
-      <td>
-        {% for band in user.musicians.bands.all %}
-            <a href="#">{{ band.name }}</a>
-        {% endfor %}
-      </td>
+      <td>{% if user.musician.is_busy %}
+        Yes
+      {% else %}
+        No
+      {% endif %}</td>
     </tr>
     <tr>
       <td>Instruments</td>
@@ -50,7 +46,17 @@
         {% endfor %}
       </td>
     </tr>
+    <tr>
+      <td>Bands</td>
+      <td>
+        {% for band in user.musicians.bands.all %}
+            <a href="#">{{ band.name }}</a>
+        {% endfor %}
+      </td>
+    </tr>
   </tbody>
 </table>
+
+<a href="{% url 'profile_edit' %}" class="btn bg-orange mybtn">Edit profile</a>
 
 {% endblock content %}
