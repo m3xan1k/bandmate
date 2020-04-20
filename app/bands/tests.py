@@ -313,12 +313,19 @@ class TestMusiciansViews(TestCase):
         Band.objects.all().delete()
         Style.objects.all().delete()
 
-    def test_musicians_list_view(self):
+    def test_musicians_view(self):
         response: HttpResponse = self.client.get(self.MUSICIANS_URL)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 4)
 
         musician = Musician.objects.first()
         response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}{musician.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musician.html')
+
+        city = City.objects.first()
+        response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}?city={city.id}')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        # self.assertEqual(len(response.context[0].get('musicians')), 2)

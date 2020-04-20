@@ -1,11 +1,12 @@
-from typing import Union
+from typing import Union, Optional
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpRequest, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect, QueryDict
 from django.template.response import TemplateResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.contrib import messages
+from django.db.models.query import QuerySet
 
 from bands.forms import MusicianProfileForm
 from bands.models import Musician
@@ -59,6 +60,20 @@ class MusiciansView(View):
     def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
         if id is None:
             musicians = Musician.objects.all()
+            '''Check for filter params'''
+            if request.GET:
+                musicians = self.apply_filters(musicians, request.GET)
+                return render(request, 'bands/musicians.html', {'musicians': musicians})
             return render(request, 'bands/musicians.html', {'musicians': musicians})
         musician = get_object_or_404(Musician, id=id)
         return render(request, 'bands/musician.html', {'musician': musician})
+
+    def apply_filters(self, musicians: QuerySet, filters: QueryDict) -> Optional[QuerySet]:
+        '''Extract all filters'''
+        city_id = filters.get('city')
+
+        '''Apply filters'''
+        if city_id is not None:
+            musicians = musicians.filter(city_id=city_id).all()
+
+        return musicians

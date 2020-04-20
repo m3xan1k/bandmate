@@ -1,1 +1,28 @@
 {% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} | Musicians
+{% endblock title %}
+
+{% block content %}
+
+    {% for musician in musicians %}
+
+        <div class="card">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">{{ musician.user }}</h5>
+                <h6>
+                    {% for instrument in musician.instruments.all|slice:":10" %}
+                        {{ instrument.name }} 
+                    {% endfor %}
+                </h6>
+                <p class="card-text">{{ musician.bio }}</p>
+                <h6>{{ musician.city.name }}</h6>
+                <a href="{% url 'musicians' musician.id %}">See details</a>
+            </div>
+        </div>
+
+    {% endfor %}
+
+{% endblock content %}
