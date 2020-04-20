@@ -12,10 +12,11 @@
 </head>
 <body>
     {% include "partials/navbar.html" %}
-    <div class="container">
+    <div class="container mb-5">
     {% block content %}
     
     {% endblock content %}
     </div>
+    {% include "partials/footer.html" %}
 </body>
 </html>
