@@ -9,6 +9,10 @@ from bands.forms import MusicianProfileForm
 from bands.models import Musician
 
 
+def home(request: HttpRequest) -> TemplateResponse:
+    return render(request, 'home.html')
+
+
 class UserDashboardView(LoginRequiredMixin, View):
 
     name = 'user_dashboard'
