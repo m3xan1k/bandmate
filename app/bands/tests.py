@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.shortcuts import reverse
+from django.http import HttpResponse
+from django.contrib import auth
 import factory
 
 from bands.models import (
@@ -8,9 +10,9 @@ from bands.models import (
     Musician, Band,
 )
 from bands.views import (
-    UserDashboardView,
+    UserDashboardView, ProfileEditView,
 )
-from users.views import LogInView
+from users.views import LogInView, LogOutView
 
 
 class CityFactory(factory.DjangoModelFactory):
@@ -71,7 +73,7 @@ class BandFactory(factory.DjangoModelFactory):
                 self.styles.add(style)
 
 
-class TestBands(TestCase):
+class TestBandsModels(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -182,3 +184,60 @@ class TestDashboard(TestCase):
         response = self.client.get(self.DASHBOARD_URL)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/user_dashboard.html')
+
+    def test_get_dashboard_not_authorized(self):
+        response: HttpResponse = self.client.get(self.DASHBOARD_URL)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f'{self.LOGIN_URL}?next={self.DASHBOARD_URL}')
+
+
+class TestProfileView(TestCase):
+
+    DASHBOARD_URL = reverse(UserDashboardView.name)
+    LOGIN_URL = reverse(LogInView.name)
+    LOGOUT_URL = reverse(LogOutView.name)
+    PROFILE_EDIT_URL = reverse(ProfileEditView.name)
+
+    def setUp(self):
+        email = 'test@test.ru'
+        username = 'test_username'
+        password = 'test_password'
+        User.objects.create_user(
+            email=email,
+            username=username,
+            password=password,
+        )
+        login_data = {
+            'username': 'test_username',
+            'password': 'test_password',
+        }
+        self.client.post(self.LOGIN_URL, data=login_data)
+
+    def tearDown(self):
+        User.objects.all().delete()
+
+    def test_get_profile_edit_page(self):
+        response: HttpResponse = self.client.get(self.PROFILE_EDIT_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/profile_edit.html')
+
+    def test_get_profile_edit_not_authorized(self):
+        self.client.get(self.LOGOUT_URL)
+        response: HttpResponse = self.client.get(self.PROFILE_EDIT_URL)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f'{self.LOGIN_URL}?next={self.PROFILE_EDIT_URL}')
+
+    def test_post_profile_edit(self):
+        profile_data = {
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'birth_date': '1988-04-17',
+        }
+        response: HttpResponse = self.client.post(self.PROFILE_EDIT_URL, data=profile_data)
+        self.assertTrue(response.status_code, 302)
+        self.assertRedirects(response, self.DASHBOARD_URL)
+        user: User = auth.get_user(self.client)
+        musician = Musician.objects.filter(user=user).first()
+        self.assertEqual(musician.first_name, 'John')
+        self.assertEqual(musician.last_name, 'Doe')
+        print(musician.birth_date)
