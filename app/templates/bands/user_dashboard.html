@@ -32,21 +32,25 @@
     </tr>
     <tr>
       <td>Is Busy</td>
-      <td>{{ user.musician.is_busy }}</td>
-    </tr>
-    <tr>
-      <td>Bands</td>
-      <td>
-        {% for band in user.musicians.bands.all %}
-            <a href="#">{{ band.name }}</a>
-        {% endfor %}
-      </td>
+      <td>{% if user.musician.is_busy %}
+        Yes
+      {% else %}
+        No
+      {% endif %}</td>
     </tr>
     <tr>
       <td>Instruments</td>
       <td>
         {% for instrument in user.musician.bands.all %}
             <h6>{{ instrument.name }}</h6>
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Bands</td>
+      <td>
+        {% for band in user.musicians.bands.all %}
+            <a href="#">{{ band.name }}</a>
         {% endfor %}
       </td>
     </tr>

@@ -55,11 +55,14 @@ class LogInView(View):
             if user is not None:
                 if user.is_active:
                     login(request, user)
+                    messages.success(request, 'You logged in')
+                    return redirect(UserDashboardView.name)
                 messages.error(request, 'Account disabled')
                 return render(request, 'users/login.html', {'form': form})
             messages.error(request, 'Wrong password or username')
             return render(request, 'users/login.html', {'form': form})
-        return redirect(UserDashboardView.name)
+        messages.error(request, 'Wrong password or username')
+        return render(request, 'users/login.html', {'form': form})
 
 
 class LogOutView(View):
