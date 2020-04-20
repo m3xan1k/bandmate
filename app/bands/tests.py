@@ -10,7 +10,7 @@ from bands.models import (
     Musician, Band,
 )
 from bands.views import (
-    UserDashboardView, ProfileEditView,
+    UserDashboardView, ProfileEditView, MusiciansView
 )
 from users.views import LogInView, LogOutView
 
@@ -262,3 +262,63 @@ class TestProfileView(TestCase):
         self.assertEqual(user.musician.city.name, 'Moscow')
         self.assertEqual(user.musician.instruments.count(), 1)
         self.assertEqual(user.musician.instruments.all()[0].name, 'Guitar')
+
+
+class TestMusiciansViews(TestCase):
+
+    MUSICIANS_URL = reverse(MusiciansView.name)
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Creating objects:
+            City — 2
+            InstrumentCategories — 2
+            Instruments — 4 overall: 2 for each category
+            Styles — 2
+            Users(Musicians) — 4 overall: 2 for each City and Band,
+                each has unique instrument
+            Bands — 2 overall: each has unique City and Style
+        """
+        cities = CityFactory.create_batch(size=2)
+        instrument_categories = InstrumentCategoryFactory.create_batch(size=2)
+        instruments = [InstrumentFactory.create_batch(size=2, category=category)
+                       for category in instrument_categories]
+        instruments = [instrument for instrument_group in instruments
+                       for instrument in instrument_group]
+        styles = StyleFactory.create_batch(size=2)
+        users = UserFactory.create_batch(size=4)
+        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n])
+                 for n in range(2)]
+        for user in users[:2]:
+            user.musician.bands.add(bands[0])
+            user.musician.city = cities[0]
+            user.save()
+
+        for user in users[2:]:
+            user.musician.bands.add(bands[1])
+            user.musician.city = cities[1]
+            user.save()
+
+        for user, instrument in zip(users, instruments):
+            user.musician.instruments.add(instrument)
+            user.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        City.objects.all().delete()
+        Instrument.objects.all().delete()
+        InstrumentCategory.objects.all().delete()
+        Musician.objects.all().delete()
+        Band.objects.all().delete()
+        Style.objects.all().delete()
+
+    def test_musicians_list_view(self):
+        response: HttpResponse = self.client.get(self.MUSICIANS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+
+        musician = Musician.objects.first()
+        response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}{musician.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musician.html')

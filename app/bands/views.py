@@ -1,4 +1,6 @@
-from django.shortcuts import render, redirect
+from typing import Union
+
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -48,3 +50,15 @@ class ProfileEditView(LoginRequiredMixin, View):
             messages.success(request, 'Profile saved')
             return redirect(UserDashboardView.name)
         return render(request, 'bands/profile_edit.html', {'form': form})
+
+
+class MusiciansView(View):
+
+    name = 'musicians'
+
+    def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
+        if id is None:
+            musicians = Musician.objects.all()
+            return render(request, 'bands/musicians.html', {'musicians': musicians})
+        musician = get_object_or_404(Musician, id=id)
+        return render(request, 'bands/musician.html', {'musician': musician})
