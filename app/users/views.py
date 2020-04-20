@@ -7,6 +7,7 @@ from django.template.response import TemplateResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 
 from users.forms import SignUpForm, LogInForm, PasswordChangeForm
 from bands.views import UserDashboardView
@@ -30,6 +31,7 @@ class SingUpView(View):
             )
             new_user.set_password(form_data['password'])
             new_user.save()
+            messages.success(request, 'You successfully registered')
             return redirect(LogInView.name)
         return render(request, 'users/signup.html', {'form': form})
 
@@ -53,9 +55,10 @@ class LogInView(View):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-
-            # TODO: exceptions and flash messages if user is not active or None
-
+                messages.error(request, 'Account disabled')
+                return render(request, 'users/login.html', {'form': form})
+            messages.error(request, 'Wrong password or username')
+            return render(request, 'users/login.html', {'form': form})
         return redirect(UserDashboardView.name)
 
 
@@ -65,6 +68,7 @@ class LogOutView(View):
 
     def get(self, request: HttpRequest) -> HttpResponseRedirect:
         logout(request)
+        messages.info(request, 'You logged out')
         return redirect(LogInView.name)
 
 
@@ -86,9 +90,9 @@ class PasswordChangeView(LoginRequiredMixin, View):
             if user.check_password(form_data['old_password']):
                 user.set_password(form_data['password'])
                 user.save()
+                messages.info(request, 'Password changed')
                 return redirect(LogInView.name)
-
-            # TODO: make flash message about wrong password
-
+            messages.error(request, 'Wrong password')
             return render(request, 'users/password_change.html', {'form': form})
+        messages.error(request, 'Passwords not match')
         return render(request, 'users/password_change.html', {'form': form})
