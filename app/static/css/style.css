@@ -39,7 +39,11 @@
 }
 
 .mybtn:hover {
-    background-color: aliceblue;
+    background-color: #d2fdff;
+}
+
+#sticky-footer {
+    flex-shrink: none;
 }
 
 * {
