@@ -10,7 +10,7 @@
     {% endfor %}
 {% endif %}
 
-<form action="{% url 'login' %}" method="post">
+<form class="form mb-5" action="{% url 'login' %}" method="post">
 
     {% for field in form %}
     
@@ -24,5 +24,6 @@
     <input class="btn bg-light-blue mybtn" type="submit" value="LogIn">
 
 </form>
+<a href="{% url 'password_reset' %}">Forgot password?</a>
 
 {% endblock content %}

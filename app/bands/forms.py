@@ -25,7 +25,8 @@ class MusicianProfileForm(forms.ModelForm):
     class Meta:
         model = Musician
         fields = ('first_name', 'last_name', 'birth_date',
-                  'city', 'is_busy', 'instruments', 'bio')
+                  'city', 'is_busy', 'instruments', 'bio',
+                  'activated')
 
 
 class MusicianFilterForm(forms.Form):
