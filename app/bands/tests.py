@@ -111,6 +111,10 @@ class TestBandsModels(TestCase):
             user.musician.instruments.add(instrument)
             user.save()
 
+        for user in users[:2]:
+            user.musician.activated = True
+            user.musician.save()
+
     @classmethod
     def tearDownClass(cls):
         City.objects.all().delete()
@@ -160,6 +164,28 @@ class TestBandsModels(TestCase):
         assert instrument_2.category.name == 'instrument_category_1'
         assert instrument_2.musicians.count() == 1
         assert instrument_2.musicians.first().user.username == 'user_2'
+
+    def test_musicians_creation(self):
+        self.assertEqual(Musician.objects.count(), 4)
+        self.assertEqual(Musician.activated_objects.count(), 2)
+        musician_0 = Musician.objects.filter(user__username='user_0').first()
+        self.assertEqual(musician_0.bands.count(), 1)
+        self.assertEqual(musician_0.bands.first().name, 'band_0')
+        self.assertEqual(musician_0.instruments.count(), 1)
+        self.assertEqual(musician_0.instruments.first().name, 'instrument_0')
+
+    def test_styles_creation(self):
+        self.assertEqual(Style.objects.count(), 2)
+        style_0 = Style.objects.filter(name='style_0').first()
+        self.assertEqual(style_0.bands.count(), 1)
+        self.assertEqual(style_0.bands.first().name, 'band_0')
+
+    def test_bands_creatinon(self):
+        self.assertEqual(Band.objects.count(), 2)
+        band_1 = Band.objects.filter(name='band_1').first()
+        self.assertEqual(band_1.musicians.count(), 2)
+        self.assertEqual(band_1.musicians.first().user.username, 'user_2')
+        self.assertEqual(band_1.styles.first().name, 'style_1')
 
 
 class TestDashboard(TestCase):
