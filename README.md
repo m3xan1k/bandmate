@@ -1,2 +1,2 @@
 # bandmate
-onlline board for musicians to find band/work
+onlline board for musicians to find band/work/mates
