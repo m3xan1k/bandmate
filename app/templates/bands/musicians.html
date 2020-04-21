@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} | Musicians
+{% endblock title %}
+
+{% block content %}
+
+    <form action="." method="GET" class="form-inline mb-5 justify-content-center">
+    
+        {% for field in form %}
+            {{ field.label }}
+            {{ field }}
+        {% endfor %}
+
+        <input type="submit" value="Search" class="btn bg-middle-blue mybtn">
+
+    </form>
+
+    <h1 class="text-center mb-5">Musicians</h1>
+
+    <div class="row justify-content-around mb-5">
+    {% for musician in musicians %}
+        <div class="card col-3">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">{{ musician.full_name }}</h5>
+                <p class="card-text">
+                    {% if musician.is_busy %}<span class="badge badge-danger">Busy</span>{% else %}<span class="badge badge-success">Vacant</span>{% endif %}</p>
+                <h6>
+                    {% for instrument in musician.instruments.all|slice:":3" %}
+                        {{ instrument.name }} 
+                    {% endfor %}
+                </h6>
+                <h6>{{ musician.city.name }}</h6>
+                <a href="{% url 'musicians' musician.id %}">See details</a>
+            </div>
+        </div>
+        {% if forloop.counter|divisibleby:3 %}
+            </div>
+            <div class="row justify-content-around mb-5">
+        {% endif %}
+    {% endfor %}
+    </div>
+
+    {% if musicians.has_other_pages %}
+    <nav class="mb-5">
+        <ul class="pagination justify-content-center">
+            {% if musicians.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ musicians.previous_page_number }}">PREV</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">PREV</span></li>
+            {% endif %}
+            {% if musicians.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ musicians.next_page_number }}">NEXT</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">NEXT</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% endblock content %}

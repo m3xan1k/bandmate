@@ -1,0 +1,5 @@
+<div class="list-group">
+  <a href="{% url 'user_dashboard' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_dashboard' %} active{% endif %}">Overview</a>
+  <a href="{% url 'profile_edit' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile_edit' %} active{% endif %}">Edit profile</a>
+  <a href="{% url 'password_change' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'password_change' %} active{% endif %}">Password change</a>
+</div>

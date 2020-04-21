@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ block.super }} | {{ musician.full_name }}
+{% endblock title %}
+
+{% block content %}
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'musicians' %}">Musicians</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ musician.full_name }}</li>
+        </ol>
+    </nav>
+
+    <h1 class="text-center">Musician</h1>
+
+    <div class="">
+        <h3>{{ musician.full_name }}</h3>
+        <p>{% if musician.is_busy %}<span class="badge badge-danger">Busy</span>{% else %}<span
+                class="badge badge-success">Vacant</span>{% endif %}</p>
+        {% if musician.instruments %}
+        <ul class="list-inline">
+            {% for instrument in musician.instruments.all %}
+            <li class="list-inline-item">
+                {{ instrument.name }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if musician.bands %}
+        <ul class="list-inline">
+            {% for band in musician.bands.all %}
+            <li class="list-inline-item">
+                {{ band.name }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <p class="lead">{{ musician.bio }}</p>
+        <h6>{{ musician.city.name }}</h6>
+    </div>
+
+{% endblock content %}

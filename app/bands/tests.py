@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.shortcuts import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.contrib import auth
 import factory
 
@@ -10,7 +10,7 @@ from bands.models import (
     Musician, Band,
 )
 from bands.views import (
-    UserDashboardView, ProfileEditView,
+    UserDashboardView, ProfileEditView, MusiciansView
 )
 from users.views import LogInView, LogOutView
 
@@ -111,22 +111,31 @@ class TestBandsModels(TestCase):
             user.musician.instruments.add(instrument)
             user.save()
 
+        for user in users[:2]:
+            user.musician.activated = True
+            user.musician.save()
+
     @classmethod
     def tearDownClass(cls):
-        pass
+        City.objects.all().delete()
+        Instrument.objects.all().delete()
+        InstrumentCategory.objects.all().delete()
+        Musician.objects.all().delete()
+        Band.objects.all().delete()
+        Style.objects.all().delete()
 
     @staticmethod
-    def test_representation():
-        assert City.objects.first().__str__() == '<City: city_0>'
-        assert Instrument.objects.last().__str__() == '<Instrument: instrument_3>'
+    def test_stringify():
+        assert City.objects.first().__str__() == 'city_0'
+        assert Instrument.objects.last().__str__() == 'instrument_3'
         musician = Musician.objects.filter(user__username='user_0').first()
         musician.first_name = 'John'
         musician.last_name = 'Doe'
-        assert musician.__str__() == '<Musician: John username: user_0 Doe>'
-        assert Band.objects.first().__str__() == '<Band: band_0 id: 1>'
-        assert Style.objects.last().__str__() == '<Style: style_1>'
+        assert musician.__str__() == 'John user_0 Doe'
+        assert Band.objects.first().__str__() == 'band_0'
+        assert Style.objects.last().__str__() == 'style_1'
         category = InstrumentCategory.objects.last()
-        assert category.__str__() == '<InstrumentCategory: instrument_category_1>'
+        assert category.__str__() == 'instrument_category_1'
 
     @staticmethod
     def test_city_creation():
@@ -155,6 +164,28 @@ class TestBandsModels(TestCase):
         assert instrument_2.category.name == 'instrument_category_1'
         assert instrument_2.musicians.count() == 1
         assert instrument_2.musicians.first().user.username == 'user_2'
+
+    def test_musicians_creation(self):
+        self.assertEqual(Musician.objects.count(), 4)
+        self.assertEqual(Musician.activated_objects.count(), 2)
+        musician_0 = Musician.objects.filter(user__username='user_0').first()
+        self.assertEqual(musician_0.bands.count(), 1)
+        self.assertEqual(musician_0.bands.first().name, 'band_0')
+        self.assertEqual(musician_0.instruments.count(), 1)
+        self.assertEqual(musician_0.instruments.first().name, 'instrument_0')
+
+    def test_styles_creation(self):
+        self.assertEqual(Style.objects.count(), 2)
+        style_0 = Style.objects.filter(name='style_0').first()
+        self.assertEqual(style_0.bands.count(), 1)
+        self.assertEqual(style_0.bands.first().name, 'band_0')
+
+    def test_bands_creatinon(self):
+        self.assertEqual(Band.objects.count(), 2)
+        band_1 = Band.objects.filter(name='band_1').first()
+        self.assertEqual(band_1.musicians.count(), 2)
+        self.assertEqual(band_1.musicians.first().user.username, 'user_2')
+        self.assertEqual(band_1.styles.first().name, 'style_1')
 
 
 class TestDashboard(TestCase):
@@ -243,4 +274,142 @@ class TestProfileView(TestCase):
         self.assertEqual(musician.birth_date.strftime('%Y-%m-%d'), '1988-04-17')
 
     def test_post_profile_edit_relations(self):
-        pass
+        city = City.objects.create(name='Moscow')
+        instrument = Instrument.objects.create(name='Guitar')
+        profile_data = {
+            'city': city.id,
+            'instruments': (instrument.id, ),
+        }
+        response: HttpResponse = self.client.post(self.PROFILE_EDIT_URL, data=profile_data)
+        self.assertTrue(response.status_code, 302)
+        self.assertRedirects(response, self.DASHBOARD_URL)
+
+        user: User = auth.get_user(self.client)
+        self.assertEqual(user.musician.city.name, 'Moscow')
+        self.assertEqual(user.musician.instruments.count(), 1)
+        self.assertEqual(user.musician.instruments.all()[0].name, 'Guitar')
+
+
+class TestMusiciansViews(TestCase):
+
+    MUSICIANS_URL = reverse(MusiciansView.name)
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Creating objects:
+            City — 2
+            InstrumentCategories — 2
+            Instruments — 4 overall: 2 for each category
+            Styles — 2
+            Users(Musicians) — 4 overall: 2 for each City and Band,
+                each has unique instrument
+            Bands — 2 overall: each has unique City and Style
+        """
+        cities = CityFactory.create_batch(size=2)
+        instrument_categories = InstrumentCategoryFactory.create_batch(size=2)
+        instruments = [InstrumentFactory.create_batch(size=2, category=category)
+                       for category in instrument_categories]
+        instruments = [instrument for instrument_group in instruments
+                       for instrument in instrument_group]
+        styles = StyleFactory.create_batch(size=2)
+        users = UserFactory.create_batch(size=4)
+        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n])
+                 for n in range(2)]
+        for user in users[:2]:
+            user.musician.bands.add(bands[0])
+            user.musician.city = cities[0]
+            user.save()
+
+        for user in users[2:]:
+            user.musician.bands.add(bands[1])
+            user.musician.city = cities[1]
+            user.save()
+
+        for user, instrument in zip(users, instruments):
+            user.musician.instruments.add(instrument)
+            user.save()
+
+        for user in users:
+            user.musician.activated = True
+            user.musician.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        City.objects.all().delete()
+        Instrument.objects.all().delete()
+        InstrumentCategory.objects.all().delete()
+        Musician.objects.all().delete()
+        Band.objects.all().delete()
+        Style.objects.all().delete()
+
+    def setUp(self):
+        # to reset django cache
+        request = HttpRequest()
+        musicians_view = MusiciansView()
+        musicians_view.get(request)
+
+    def test_musicians_view(self):
+        response: HttpResponse = self.client.get(self.MUSICIANS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 4)
+
+    def test_musician_detail_view(self):
+        musician = Musician.objects.first()
+        response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}{musician.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musician.html')
+
+    def test_musicians_view_filter_instrument(self):
+        instrument = Instrument.objects.last()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 1)
+
+    def test_musicians_view_filter_city(self):
+        city = City.objects.first()
+        response = self.client.get(f'{self.MUSICIANS_URL}?city={city.id}')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 2)
+
+    def test_musicians_view_filter_combined_empty(self):
+        instrument = Instrument.objects.first()
+        city = City.objects.last()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}&city={city.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 0)
+
+    def test_musicians_view_filter_combined(self):
+        instrument = Instrument.objects.first()
+        city = City.objects.first()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}&city={city.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 1)
+
+    def test_musicians_order_by_busy(self):
+        # setup
+        musicians = Musician.objects.all()
+        for musician in musicians[:2]:
+            musician.is_busy = True
+            musician.save()
+
+        response: HttpResponse = self.client.get(self.MUSICIANS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        musicians = response.context[0].get('musicians').object_list
+        self.assertEqual(len(musicians), 4)
+        for musician in musicians[:2]:
+            self.assertFalse(musician.is_busy)
+        for musician in musicians[2:]:
+            self.assertTrue(musician.is_busy)

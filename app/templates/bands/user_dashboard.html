@@ -8,7 +8,14 @@
 
 <h1 class="text-center mb-5">Dashboard</h1>
 
-<table class="table table-borderless col-6 justify-content-center mx-auto">
+<div class="row">
+
+<div class="col-3">
+  {% include "partials/user_dashboard_menu.html" %}
+</div>
+
+<div class="col-6 mb-5 mx-auto justify-content-center">
+<table class="table table-borderless">
   <tbody>
     <tr>
       <td>Username</td>
@@ -28,7 +35,7 @@
     </tr>
     <tr>
       <td>City</td>
-      <td>{{ user.musician.city }}</td>
+      <td>{{ user.musician.city.name }}</td>
     </tr>
     <tr>
       <td>Is Busy</td>
@@ -41,8 +48,8 @@
     <tr>
       <td>Instruments</td>
       <td>
-        {% for instrument in user.musician.bands.all %}
-            <h6>{{ instrument.name }}</h6>
+        {% for instrument in user.musician.instruments.all %}
+            <p>{{ instrument.name }}</p>
         {% endfor %}
       </td>
     </tr>
@@ -54,9 +61,16 @@
         {% endfor %}
       </td>
     </tr>
+    <tr>
+      <td>Bio</td>
+      <td>
+        {{ user.musician.bio }}
+      </td>
+    </tr>
   </tbody>
 </table>
 
-<a href="{% url 'profile_edit' %}" class="btn bg-orange mybtn">Edit profile</a>
+</div>
+</div>
 
 {% endblock content %}

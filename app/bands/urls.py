@@ -9,4 +9,6 @@ urlpatterns = [
          name=views.UserDashboardView.name),
     path('user_profile/', views.ProfileEditView.as_view(),
          name=views.ProfileEditView.name),
+    path('musicians/', views.MusiciansView.as_view(), name=views.MusiciansView.name),
+    path('musicians/<int:id>/', views.MusiciansView.as_view(), name=views.MusiciansView.name),
 ]

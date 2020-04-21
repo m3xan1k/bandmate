@@ -42,6 +42,10 @@
     background-color: #d2fdff;
 }
 
+a.list-group-item.active {
+    background-color: #303c6c;
+}
+
 #sticky-footer {
     flex-shrink: none;
 }
@@ -50,7 +54,12 @@
     font-family: 'Open Sans', Helvetica, sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Proza Libre', Helvetica, sans-serif;
 }
 
