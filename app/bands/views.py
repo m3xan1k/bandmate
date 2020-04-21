@@ -7,8 +7,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.contrib import messages
 from django.db.models.query import QuerySet
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from bands.forms import MusicianProfileForm
+from bands.forms import MusicianProfileForm, MusicianFilterForm
 from bands.models import Musician, Instrument
 
 
@@ -44,7 +45,7 @@ class ProfileEditView(LoginRequiredMixin, View):
             for field in form_data:
                 try:
                     setattr(musician, field, form_data[field])
-                # exception for instruments
+                # exception for instruments m2m field
                 except TypeError:
                     musician.instruments.set(form_data[field])
             musician.save()
@@ -56,17 +57,33 @@ class ProfileEditView(LoginRequiredMixin, View):
 class MusiciansView(View):
 
     name = 'musicians'
+    form = MusicianFilterForm
 
     def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
-        if id is None:
-            musicians = Musician.objects.all()
+        form = self.form(request.GET)
+        if not id:
+            musicians = Musician.activated_objects.all()
             '''Check for filter params'''
             if request.GET:
                 musicians = self.apply_filters(musicians, request.GET)
-                return render(request, 'bands/musicians.html',
-                              {'musicians': musicians.order_by('is_busy')})
-            return render(request, 'bands/musicians.html',
-                          {'musicians': musicians.order_by('is_busy')})
+            '''Apply order'''
+            musicians = musicians.order_by('is_busy')
+
+            '''Show 9 musicians per page'''
+            paginator = Paginator(musicians, 9)
+            page = request.GET.get('page')
+            try:
+                musicians = paginator.page(page)
+            except PageNotAnInteger:
+                musicians = paginator.page(1)
+            except EmptyPage:
+                musicians = paginator.page(paginator.num_pages)
+
+            context = {
+                'musicians': musicians,
+                'form': form,
+            }
+            return render(request, 'bands/musicians.html', context)
         musician = get_object_or_404(Musician, id=id)
         return render(request, 'bands/musician.html', {'musician': musician})
 
@@ -76,9 +93,9 @@ class MusiciansView(View):
         instrument_id = filters.get('instrument')
 
         '''Apply filters'''
-        if city_id is not None:
+        if city_id:
             musicians = musicians.filter(city_id=city_id).all()
-        if instrument_id is not None:
+        if instrument_id:
             instrument = Instrument.objects.filter(id=instrument_id).first()
             musicians = musicians.filter(instruments__in=[instrument]).all()
 

@@ -46,6 +46,11 @@ class Style(models.Model):
         return f'<Style: {self.name}>'
 
 
+class MusicianManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(activated=True)
+
+
 class Musician(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=50, blank=True)
@@ -53,13 +58,20 @@ class Musician(models.Model):
     bio = models.TextField(blank=True)
     birth_date = models.DateField(null=True, blank=True)
     is_busy = models.BooleanField(default=False, null=False, blank=False)
+    activated = models.BooleanField(default=False, null=False, blank=False)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='musicians', null=True)
     bands = models.ManyToManyField('Band', related_name='musicians')
     instruments = models.ManyToManyField('Instrument', related_name='musicians')
 
+    objects = models.Manager()
+    activated_objects = MusicianManager()
+
     def representation_name(self):
         return f'{self.first_name} {self.user.username} {self.last_name}'.strip()
+
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
 
     def __str__(self):
         return f'{self.representation_name()}'

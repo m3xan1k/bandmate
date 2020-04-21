@@ -304,6 +304,10 @@ class TestMusiciansViews(TestCase):
             user.musician.instruments.add(instrument)
             user.save()
 
+        for user in users:
+            user.musician.activated = True
+            user.musician.save()
+
     @classmethod
     def tearDownClass(cls):
         City.objects.all().delete()
@@ -377,8 +381,8 @@ class TestMusiciansViews(TestCase):
         response: HttpResponse = self.client.get(self.MUSICIANS_URL)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musicians.html')
-        musicians = response.context[0].get('musicians')
-        self.assertEqual(musicians.count(), 4)
+        musicians = response.context[0].get('musicians').object_list
+        self.assertEqual(len(musicians), 4)
         for musician in musicians[:2]:
             self.assertFalse(musician.is_busy)
         for musician in musicians[2:]:

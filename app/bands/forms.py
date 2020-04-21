@@ -20,8 +20,18 @@ class MusicianProfileForm(forms.ModelForm):
         help_text='May select multiple', required=False, queryset=Instrument.objects.all())
     bio = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control'}), required=False)
+    activated = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
 
     class Meta:
         model = Musician
         fields = ('first_name', 'last_name', 'birth_date',
                   'city', 'is_busy', 'instruments', 'bio')
+
+
+class MusicianFilterForm(forms.Form):
+    city = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=City.objects.all())
+    instrument = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=Instrument.objects.all())
