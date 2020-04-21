@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.shortcuts import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.contrib import auth
 import factory
 
@@ -313,19 +313,73 @@ class TestMusiciansViews(TestCase):
         Band.objects.all().delete()
         Style.objects.all().delete()
 
+    def setUp(self):
+        # to reset django cache
+        request = HttpRequest()
+        musicians_view = MusiciansView()
+        musicians_view.get(request)
+
     def test_musicians_view(self):
         response: HttpResponse = self.client.get(self.MUSICIANS_URL)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musicians.html')
         self.assertEqual(len(response.context[0].get('musicians')), 4)
 
+    def test_musician_detail_view(self):
         musician = Musician.objects.first()
         response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}{musician.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musician.html')
 
-        city = City.objects.first()
-        response: HttpResponse = self.client.get(f'{self.MUSICIANS_URL}?city={city.id}')
+    def test_musicians_view_filter_instrument(self):
+        instrument = Instrument.objects.last()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}'
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bands/musicians.html')
-        # self.assertEqual(len(response.context[0].get('musicians')), 2)
+        self.assertEqual(len(response.context[0].get('musicians')), 1)
+
+    def test_musicians_view_filter_city(self):
+        city = City.objects.first()
+        response = self.client.get(f'{self.MUSICIANS_URL}?city={city.id}')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 2)
+
+    def test_musicians_view_filter_combined_empty(self):
+        instrument = Instrument.objects.first()
+        city = City.objects.last()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}&city={city.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 0)
+
+    def test_musicians_view_filter_combined(self):
+        instrument = Instrument.objects.first()
+        city = City.objects.first()
+        response = self.client.get(
+            f'{self.MUSICIANS_URL}?instrument={instrument.id}&city={city.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        self.assertEqual(len(response.context[0].get('musicians')), 1)
+
+    def test_musicians_order_by_busy(self):
+        # setup
+        musicians = Musician.objects.all()
+        for musician in musicians[:2]:
+            musician.is_busy = True
+            musician.save()
+
+        response: HttpResponse = self.client.get(self.MUSICIANS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/musicians.html')
+        musicians = response.context[0].get('musicians')
+        self.assertEqual(musicians.count(), 4)
+        for musician in musicians[:2]:
+            self.assertFalse(musician.is_busy)
+        for musician in musicians[2:]:
+            self.assertTrue(musician.is_busy)
