@@ -8,9 +8,10 @@ from django.views import View
 from django.contrib import messages
 from django.db.models.query import QuerySet
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import PermissionDenied
 
-from bands.forms import MusicianProfileForm, MusicianFilterForm
-from bands.models import Musician, Instrument
+from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm
+from bands.models import Musician, Instrument, Band
 
 
 def home(request: HttpRequest) -> TemplateResponse:
@@ -37,7 +38,7 @@ class ProfileEditView(LoginRequiredMixin, View):
         form = self.form(instance=musician)
         return render(request, 'bands/profile_edit.html', {'form': form})
 
-    def post(self, request: HttpRequest) -> HttpResponseRedirect:
+    def post(self, request: HttpRequest) -> Union[HttpResponseRedirect, TemplateResponse]:
         form = self.form(request.POST)
         musician = Musician.objects.filter(user=request.user).first()
         if form.is_valid():
@@ -100,3 +101,64 @@ class MusiciansView(View):
             musicians = musicians.filter(instruments__in=[instrument]).all()
 
         return musicians
+
+
+class BandsDashboardView(LoginRequiredMixin, View):
+
+    name = 'bands_dashboard'
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        bands = Band.objects.filter(admin=request.user).all()
+        return render(request, 'bands/bands_dashboard.html', {'bands': bands})
+
+
+class BandEditView(LoginRequiredMixin, View):
+
+    name = 'band_edit'
+    login_url = '/users/login/'
+    form = BandEditForm
+
+    def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
+        '''If requested new band creation'''
+        if id is None:
+            form = self.form()
+            return render(request, 'bands/band_edit.html', {'form': form})
+
+        '''Check if band exists and correct user trying to edit band'''
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        form = self.form(instance=band)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def post(self, request: HttpRequest) -> Union[TemplateResponse, HttpResponseRedirect]:
+        '''Creating new band'''
+        form = self.form(request.POST)
+        if form.is_valid():
+            '''Assign simple fields'''
+            band = form.save(commit=False)
+            '''Define admin and save'''
+            band.admin = request.user
+            band.save()
+            '''Save rest of fields'''
+            form.save_m2m()
+            messages.info(request, 'Band created')
+            return redirect(BandsDashboardView.name)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def put(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
+        '''edit existed record'''
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        form = self.form(request.POST, instance=band)
+        if form.is_valid():
+            band = form.save()
+            messages.info(request, 'Band info updated')
+            return redirect(BandsDashboardView.name)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def delete(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
+        Band.objects.filter(id=id).first().delete()
+        messages.info(request, 'Band deleted')
+        return redirect(BandsDashboardView.name)

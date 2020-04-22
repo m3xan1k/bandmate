@@ -61,7 +61,6 @@ class Musician(models.Model):
     activated = models.BooleanField(default=False, null=False, blank=False)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='musicians', null=True)
-    bands = models.ManyToManyField('Band', related_name='musicians')
     instruments = models.ManyToManyField('Instrument', related_name='musicians')
 
     objects = models.Manager()
@@ -87,19 +86,13 @@ class Band(models.Model):
     """
     admin = models.ForeignKey(User, on_delete=models.CASCADE,
                               related_name='administrated_bands')
-    name = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255)
     styles = models.ManyToManyField('Style', related_name='bands')
     description = models.TextField(blank=True)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='bands', null=True)
-
-    @classmethod
-    def create(cls, admin: User, *args, **kwargs):
-        if admin is None:
-            raise ValueError("'admin' argument is required to create a band")
-        band = cls(*args, **kwargs)
-        band.admin.musician.bands.add(band)
-        return band
+    musicians = models.ManyToManyField('Musician', related_name='bands',
+                                       db_table='bands_musician_bands')
 
     def __str__(self):
         return f'{self.name}'
