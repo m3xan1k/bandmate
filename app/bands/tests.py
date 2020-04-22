@@ -95,7 +95,7 @@ class TestBandsModels(TestCase):
                        for instrument in instrument_group]
         styles = StyleFactory.create_batch(size=2)
         users = UserFactory.create_batch(size=4)
-        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n])
+        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n], admin=users[n + 1])
                  for n in range(2)]
         for user in users[:2]:
             user.musician.bands.add(bands[0])
@@ -183,9 +183,12 @@ class TestBandsModels(TestCase):
     def test_bands_creatinon(self):
         self.assertEqual(Band.objects.count(), 2)
         band_1 = Band.objects.filter(name='band_1').first()
+        self.assertEqual(band_1.admin.username, 'user_2')
         self.assertEqual(band_1.musicians.count(), 2)
         self.assertEqual(band_1.musicians.first().user.username, 'user_2')
         self.assertEqual(band_1.styles.first().name, 'style_1')
+        band_0 = Band.objects.filter(name='band_0').first()
+        self.assertEqual(band_0.admin.username, 'user_1')
 
 
 class TestDashboard(TestCase):
@@ -314,7 +317,7 @@ class TestMusiciansViews(TestCase):
                        for instrument in instrument_group]
         styles = StyleFactory.create_batch(size=2)
         users = UserFactory.create_batch(size=4)
-        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n])
+        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n], admin=users[n + 1])
                  for n in range(2)]
         for user in users[:2]:
             user.musician.bands.add(bands[0])

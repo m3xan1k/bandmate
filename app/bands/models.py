@@ -81,11 +81,25 @@ class Musician(models.Model):
 
 
 class Band(models.Model):
+    """
+    Has custom method to create new instances
+    Creation new instance from Constructor is deprecated
+    """
+    admin = models.ForeignKey(User, on_delete=models.CASCADE,
+                              related_name='administrated_bands')
     name = models.CharField(max_length=255, blank=True)
     styles = models.ManyToManyField('Style', related_name='bands')
     description = models.TextField(blank=True)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='bands', null=True)
+
+    @classmethod
+    def create(cls, admin: User, *args, **kwargs):
+        if admin is None:
+            raise ValueError("'admin' argument is required to create a band")
+        band = cls(*args, **kwargs)
+        band.admin.musician.bands.add(band)
+        return band
 
     def __str__(self):
         return f'{self.name}'
