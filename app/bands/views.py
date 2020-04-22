@@ -14,8 +14,12 @@ from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm
 from bands.models import Musician, Instrument, Band
 
 
-def home(request: HttpRequest) -> TemplateResponse:
-    return render(request, 'home.html')
+class HomeView(View):
+
+    name = 'home_view'
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        return render(request, 'home.html')
 
 
 class UserDashboardView(LoginRequiredMixin, View):
@@ -39,17 +43,10 @@ class ProfileEditView(LoginRequiredMixin, View):
         return render(request, 'bands/profile_edit.html', {'form': form})
 
     def post(self, request: HttpRequest) -> Union[HttpResponseRedirect, TemplateResponse]:
-        form = self.form(request.POST)
         musician = Musician.objects.filter(user=request.user).first()
+        form = self.form(request.POST, instance=musician)
         if form.is_valid():
-            form_data = form.cleaned_data
-            for field in form_data:
-                try:
-                    setattr(musician, field, form_data[field])
-                # exception for instruments m2m field
-                except TypeError:
-                    musician.instruments.set(form_data[field])
-            musician.save()
+            form.save()
             messages.success(request, 'Profile saved')
             return redirect(UserDashboardView.name)
         return render(request, 'bands/profile_edit.html', {'form': form})
