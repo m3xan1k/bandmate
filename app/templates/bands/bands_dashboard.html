@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load method_override %}
+
+{% block title %}
+{{ block.super }} | Bands dashboard
+{% endblock title %}
+
+{% block content %}
+
+<h1 class="text-center mb-5">Bands</h1>
+
+<div class="row mb-5">
+
+<div class="col-3">
+    {% include "partials/user_dashboard_menu.html" %}
+</div>
+
+<div class="col-6 mb-5 mx-auto justify-content-center">
+    {% for band in bands %}
+        <table class="table table-borderless mb-5">
+            <tbody>
+                <tr>
+                    <td>Band name</td>
+                    <td>{{ band.name }}</td>
+                    <td>
+                        <a href="{% url 'band_edit' band.id %}" class="btn bg-yellow mybtn">Edit band</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>City</td>
+                    <td>{{ band.city }}</td>
+                    <td>
+                        <form class="form form-inline" action="{% url 'band_edit' band.id %}" method="post">
+                            {% csrf_token %}
+                            {% method_override 'DELETE' %}
+                            <input type="submit" value="Delete band" class="btn btn-danger">
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+    {% endfor %}
+
+    <a href="{% url 'band_edit' %}" class="btn bg-orange mybtn">Create new band</a>
+
+</div>
+
+</div>
+
+{% endblock content %}

@@ -8,13 +8,18 @@ from django.views import View
 from django.contrib import messages
 from django.db.models.query import QuerySet
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import PermissionDenied
 
-from bands.forms import MusicianProfileForm, MusicianFilterForm
-from bands.models import Musician, Instrument
+from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm, BandFilterForm
+from bands.models import Musician, Instrument, Band
 
 
-def home(request: HttpRequest) -> TemplateResponse:
-    return render(request, 'home.html')
+class HomeView(View):
+
+    name = 'home_view'
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        return render(request, 'home.html')
 
 
 class UserDashboardView(LoginRequiredMixin, View):
@@ -37,18 +42,11 @@ class ProfileEditView(LoginRequiredMixin, View):
         form = self.form(instance=musician)
         return render(request, 'bands/profile_edit.html', {'form': form})
 
-    def post(self, request: HttpRequest) -> HttpResponseRedirect:
-        form = self.form(request.POST)
+    def post(self, request: HttpRequest) -> Union[HttpResponseRedirect, TemplateResponse]:
         musician = Musician.objects.filter(user=request.user).first()
+        form = self.form(request.POST, instance=musician)
         if form.is_valid():
-            form_data = form.cleaned_data
-            for field in form_data:
-                try:
-                    setattr(musician, field, form_data[field])
-                # exception for instruments m2m field
-                except TypeError:
-                    musician.instruments.set(form_data[field])
-            musician.save()
+            form.save()
             messages.success(request, 'Profile saved')
             return redirect(UserDashboardView.name)
         return render(request, 'bands/profile_edit.html', {'form': form})
@@ -100,3 +98,103 @@ class MusiciansView(View):
             musicians = musicians.filter(instruments__in=[instrument]).all()
 
         return musicians
+
+
+class BandsDashboardView(LoginRequiredMixin, View):
+
+    name = 'bands_dashboard'
+    login_url = '/users/login/'
+
+    def get(self, request: HttpRequest) -> TemplateResponse:
+        bands = Band.objects.filter(admin=request.user).all()
+        return render(request, 'bands/bands_dashboard.html', {'bands': bands})
+
+
+class BandEditView(LoginRequiredMixin, View):
+
+    name = 'band_edit'
+    login_url = '/users/login/'
+    form = BandEditForm
+
+    def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
+        '''If requested new band creation'''
+        if id is None:
+            form = self.form()
+            return render(request, 'bands/band_edit.html', {'form': form})
+
+        '''Check if band exists and correct user trying to edit band'''
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        form = self.form(instance=band)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def post(self, request: HttpRequest) -> Union[TemplateResponse, HttpResponseRedirect]:
+        '''Creating new band'''
+        form = self.form(request.POST)
+        if form.is_valid():
+            '''Assign simple fields'''
+            band = form.save(commit=False)
+            '''Define admin and save'''
+            band.admin = request.user
+            band.save()
+            '''Save rest of fields'''
+            form.save_m2m()
+            messages.info(request, 'Band created')
+            return redirect(BandsDashboardView.name)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def put(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
+        '''edit existed record'''
+        print(request.POST)
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        form = self.form(request.POST, instance=band)
+        if form.is_valid():
+            band = form.save()
+            messages.info(request, 'Band info updated')
+            return redirect(BandsDashboardView.name)
+        return render(request, 'bands/band_edit.html', {'form': form})
+
+    def delete(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        band.delete()
+        messages.info(request, 'Band deleted')
+        return redirect(BandsDashboardView.name)
+
+
+class BandsView(View):
+
+    name = 'bands'
+    form = BandFilterForm
+
+    def get(self, request: HttpRequest, id: Union[int, str] = None) -> TemplateResponse:
+        form = self.form(request.GET)
+        if id is None:
+            bands = Band.objects.all()
+            '''Check filters'''
+            if request.GET:
+                bands = self.apply_filters(bands, request.GET)
+            context = {
+                'form': form,
+                'bands': bands,
+            }
+            return render(request, 'bands/bands.html', context)
+
+        band = get_object_or_404(Band, id=id)
+        return render(request, 'bands/band.html', {'band': band})
+
+    def apply_filters(self, bands: QuerySet, filters: QueryDict) -> QuerySet:
+        city_id = filters.get('city')
+        style_id = filters.get('style')
+
+        if city_id:
+            bands = bands.filter(city_id=city_id).all()
+
+        if style_id:
+            bands = bands.filter(styles__in=[style_id]).all()
+
+        return bands

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+{{ block.super }} | {{ band.name }}
+{% endblock title %}
+
+
+{% block content %}
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'bands' %}">Bands</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ band }}</li>
+        </ol>
+    </nav>
+
+    <h1 class="text-center mb-5">{{ band.name }}</h1>
+
+    <div>
+    
+        <p>{{ band.description }}</p>
+        <ul class="list-inline">
+            {% for style in band.styles.all %}
+                <a href="{% url 'bands' %}?style={{ style.id }}">{{ style }}</a>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'bands' %}?city={{ band.city.id }}">{{ band.city }}</a>
+
+        <p>Musicians:</p>
+        <ul class="">
+            {% for musician in band.musicians.all %}
+                <a href="{% url 'musicians' musician.id %}">{{ musician.full_name }}</a>
+            {% endfor %}
+        </ul>
+
+
+    </div>
+
+{% endblock content %}

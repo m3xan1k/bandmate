@@ -1,6 +1,6 @@
 from django import forms
 
-from bands.models import Musician, City, Instrument
+from bands.models import Musician, City, Instrument, Style, Band
 
 
 class MusicianProfileForm(forms.ModelForm):
@@ -36,3 +36,33 @@ class MusicianFilterForm(forms.Form):
     instrument = forms.ModelChoiceField(
         widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
         required=False, queryset=Instrument.objects.all())
+
+
+class BandFilterForm(forms.Form):
+    city = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=City.objects.all())
+    style = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=Style.objects.all())
+
+
+class BandEditForm(forms.ModelForm):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}))
+    musicians = forms.ModelMultipleChoiceField(
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        help_text='May select multiple', required=False,
+        queryset=Musician.activated_objects.all())
+    styles = forms.ModelMultipleChoiceField(
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        help_text='May select multiple', required=False, queryset=Style.objects.all())
+    city = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=False, queryset=City.objects.all())
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control'}), required=False)
+
+    class Meta:
+        model = Band
+        fields = ('name', 'musicians', 'styles', 'city', 'description')

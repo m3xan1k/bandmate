@@ -23,7 +23,7 @@
         <ul class="list-inline">
             {% for instrument in musician.instruments.all %}
             <li class="list-inline-item">
-                {{ instrument.name }}
+                <a href="{% url 'musicians' %}?instrument={{ instrument.id }}">{{ instrument.name }}</a>
             </li>
             {% endfor %}
         </ul>
@@ -32,7 +32,7 @@
         <ul class="list-inline">
             {% for band in musician.bands.all %}
             <li class="list-inline-item">
-                {{ band.name }}
+                <a href="{% url 'bands' band.id %}">{{ band.name }}</a>
             </li>
             {% endfor %}
         </ul>
