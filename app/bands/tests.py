@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import reverse
 from django.http import HttpResponse, HttpRequest
 from django.contrib import auth
+from django.db.models.query import QuerySet
 import factory
 
 from bands.models import (
@@ -10,7 +11,8 @@ from bands.models import (
     Musician, Band,
 )
 from bands.views import (
-    UserDashboardView, ProfileEditView, MusiciansView
+    UserDashboardView, ProfileEditView, MusiciansView, BandsDashboardView,
+    BandEditView,
 )
 from users.views import LogInView, LogOutView
 
@@ -117,6 +119,7 @@ class TestBandsModels(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        User.objects.all().delete()
         City.objects.all().delete()
         Instrument.objects.all().delete()
         InstrumentCategory.objects.all().delete()
@@ -339,6 +342,7 @@ class TestMusiciansViews(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        User.objects.all().delete()
         City.objects.all().delete()
         Instrument.objects.all().delete()
         InstrumentCategory.objects.all().delete()
@@ -421,58 +425,138 @@ class TestMusiciansViews(TestCase):
 class TestBandsViews(TestCase):
 
     MUSICIANS_URL = reverse(MusiciansView.name)
+    BANDS_DASHBOARD_URL = reverse(BandsDashboardView.name)
+    BAND_EDIT_URL = reverse(BandEditView.name)
+    LOGIN_URL = reverse(LogInView.name)
+    LOGOUT_URL = reverse(LogOutView.name)
 
     @classmethod
     def setUpClass(cls):
         """
         Creating objects:
             City — 2
-            InstrumentCategories — 2
-            Instruments — 4 overall: 2 for each category
             Styles — 2
-            Users(Musicians) — 4 overall: 2 for each City and Band,
-                each has unique instrument
+            Users(Musicians) — 4 overall: 2 for each Band
             Bands — 2 overall: each has unique City and Style
+            user_1 is admin for band_0
+            user_2 is admin for band_1
         """
-        cities = CityFactory.create_batch(size=2)
-        instrument_categories = InstrumentCategoryFactory.create_batch(size=2)
-        instruments = [InstrumentFactory.create_batch(size=2, category=category)
-                       for category in instrument_categories]
-        instruments = [instrument for instrument_group in instruments
-                       for instrument in instrument_group]
-        styles = StyleFactory.create_batch(size=2)
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        BandFactory.reset_sequence()
+        CityFactory.reset_sequence()
         users = UserFactory.create_batch(size=4)
-        bands = [BandFactory.create(styles=(styles[n], ), city=cities[n], admin=users[n + 1])
-                 for n in range(2)]
-        for user in users[:2]:
-            user.musician.bands.add(bands[0])
-            user.musician.city = cities[0]
-            user.save()
-
-        for user in users[2:]:
-            user.musician.bands.add(bands[1])
-            user.musician.city = cities[1]
-            user.save()
-
-        for user, instrument in zip(users, instruments):
-            user.musician.instruments.add(instrument)
-            user.save()
+        styles = StyleFactory.create_batch(size=2)
+        cities = CityFactory.create_batch(size=2)
+        [BandFactory.create(styles=(styles[n], ), city=cities[n], admin=users[n + 1])
+         for n in range(2)]
 
         for user in users:
             user.musician.activated = True
             user.musician.save()
 
+        for user in users:
+            user.set_password(user.password)
+            user.save()
+
     @classmethod
     def tearDownClass(cls):
+        User.objects.all().delete()
         City.objects.all().delete()
-        Instrument.objects.all().delete()
-        InstrumentCategory.objects.all().delete()
         Musician.objects.all().delete()
         Band.objects.all().delete()
         Style.objects.all().delete()
 
     def setUp(self):
         # to reset django cache
-        request = HttpRequest()
-        musicians_view = MusiciansView()
-        musicians_view.get(request)
+        # request = HttpRequest()
+        # dashboard_view = BandsDashboardView()
+        # dashboard_view.get(request)
+
+        login_data = {
+            'username': 'user_1',
+            'password': 'password_1',
+        }
+        self.client.post(self.LOGIN_URL, data=login_data)
+
+    def tearDown(self):
+        self.client.get(self.LOGOUT_URL)
+
+    def test_bands_dashboard(self):
+        response: HttpResponse = self.client.get(self.BANDS_DASHBOARD_URL)
+        user: User = auth.get_user(self.client)
+        self.assertTemplateUsed(response, 'bands/bands_dashboard.html')
+
+        bands: QuerySet = response.context[0].get('bands')
+        self.assertEqual(bands.count(), 1)
+        self.assertEqual(bands[0].name, 'band_0')
+        self.assertEqual(user, bands[0].admin)
+
+    def test_bands_dashboard_not_authorized(self):
+        self.client.get(self.LOGOUT_URL)
+        response: HttpResponse = self.client.get(self.BANDS_DASHBOARD_URL)
+        self.assertRedirects(response, F'{self.LOGIN_URL}?next={self.BANDS_DASHBOARD_URL}')
+
+    def test_band_edit_page_get(self):
+        response: HttpResponse = self.client.get(self.BAND_EDIT_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/band_edit.html')
+
+        band_0 = Band.objects.filter(name='band_0').first()
+        response: HttpResponse = self.client.get(f'{self.BAND_EDIT_URL}{band_0.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/band_edit.html')
+
+        response: HttpResponse = self.client.get(f'{self.BAND_EDIT_URL}{band_0.id + 1}/')
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, '403.html')
+
+        response: HttpResponse = self.client.get(f'{self.BAND_EDIT_URL}{band_0.id + 2}/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+
+    def test_band_creation(self):
+        user_1 = auth.get_user(self.client)
+        user_3 = User.objects.filter(username='user_3').first()
+        city = City.objects.create(name='new_city')
+        new_band_data = {
+            'name': 'new_band',
+            'musicians': [user_1.id, user_3.id],
+            'city': city.id,
+            'description': 'Hello',
+        }
+        response: HttpResponse = self.client.post(self.BAND_EDIT_URL, new_band_data)
+        self.assertRedirects(response, self.BANDS_DASHBOARD_URL)
+
+        new_band = Band.objects.filter(name='new_band').first()
+        self.assertEqual(new_band.admin, user_1)
+        self.assertEqual(new_band.city, city)
+        self.assertEqual(new_band.description, 'Hello')
+        self.assertEqual(
+            new_band.musicians.order_by('id').all()[0],
+            Musician.objects.filter(id__in=[user_1.id, user_3.id]).order_by('id').all()[0])
+        self.assertEqual(
+            new_band.musicians.order_by('id').all()[1],
+            Musician.objects.filter(id__in=[user_1.id, user_3.id]).order_by('id').all()[1])
+
+        response: HttpResponse = self.client.get(self.BANDS_DASHBOARD_URL)
+
+        bands: QuerySet = response.context[0].get('bands')
+        self.assertEqual(bands.count(), 2)
+        self.assertEqual(bands[1].name, 'new_band')
+
+    def test_band_delete(self):
+        band_0 = Band.objects.filter(name='band_0').first()
+        response: HttpResponse = self.client.delete(f'{self.BAND_EDIT_URL}{band_0.id}/')
+        self.assertRedirects(response, self.BANDS_DASHBOARD_URL)
+        self.assertIsNone(Band.objects.filter(name='band_0').first())
+
+        band_1 = Band.objects.filter(name='band_1').first()
+        response: HttpResponse = self.client.delete(f'{self.BAND_EDIT_URL}{band_1.id}/')
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, '403.html')
+        self.assertIsNotNone(Band.objects.filter(name='band_1').first())
+
+        response: HttpResponse = self.client.delete(f'{self.BAND_EDIT_URL}{band_1.id + 5}/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')

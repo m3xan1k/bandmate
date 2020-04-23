@@ -103,6 +103,7 @@ class MusiciansView(View):
 class BandsDashboardView(LoginRequiredMixin, View):
 
     name = 'bands_dashboard'
+    login_url = '/users/login/'
 
     def get(self, request: HttpRequest) -> TemplateResponse:
         bands = Band.objects.filter(admin=request.user).all()
@@ -145,6 +146,7 @@ class BandEditView(LoginRequiredMixin, View):
 
     def put(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
         '''edit existed record'''
+        print(request.POST)
         band = get_object_or_404(Band, id=id)
         if not band.admin == request.user:
             raise PermissionDenied
@@ -156,6 +158,9 @@ class BandEditView(LoginRequiredMixin, View):
         return render(request, 'bands/band_edit.html', {'form': form})
 
     def delete(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
-        Band.objects.filter(id=id).first().delete()
+        band = get_object_or_404(Band, id=id)
+        if not band.admin == request.user:
+            raise PermissionDenied
+        band.delete()
         messages.info(request, 'Band deleted')
         return redirect(BandsDashboardView.name)
