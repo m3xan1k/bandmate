@@ -38,6 +38,15 @@ class MusicianFilterForm(forms.Form):
         required=False, queryset=Instrument.objects.all())
 
 
+class BandFilterForm(forms.Form):
+    city = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=City.objects.all())
+    style = forms.ModelChoiceField(
+        widget=forms.Select(attrs={'class': 'custom-select my-1 mr-sm-2'}),
+        required=False, queryset=Style.objects.all())
+
+
 class BandEditForm(forms.ModelForm):
     name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control'}))

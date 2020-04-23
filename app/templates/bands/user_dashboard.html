@@ -57,7 +57,7 @@
       <td>Bands</td>
       <td>
         {% for band in user.musician.bands.all %}
-            <a href="#">{{ band.name }}</a>
+            <a href="{% url 'bands' band.id %}">{{ band.name }}</a>
         {% endfor %}
       </td>
     </tr>

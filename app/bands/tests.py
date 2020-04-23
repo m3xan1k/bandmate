@@ -636,6 +636,7 @@ class TestBandsView(TestCase):
         band = Band.objects.last()
         response: HttpResponse = self.client.get(f'{self.BANDS_URL}{band.id}/')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/band.html')
         context_band: Band = response.context[0].get('band')
         self.assertEqual(band, context_band)
 

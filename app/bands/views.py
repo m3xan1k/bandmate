@@ -10,7 +10,7 @@ from django.db.models.query import QuerySet
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import PermissionDenied
 
-from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm
+from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm, BandFilterForm
 from bands.models import Musician, Instrument, Band
 
 
@@ -169,18 +169,23 @@ class BandEditView(LoginRequiredMixin, View):
 class BandsView(View):
 
     name = 'bands'
+    form = BandFilterForm
 
     def get(self, request: HttpRequest, id: Union[int, str] = None) -> TemplateResponse:
+        form = self.form(request.GET)
         if id is None:
             bands = Band.objects.all()
             '''Check filters'''
             if request.GET:
                 bands = self.apply_filters(bands, request.GET)
-
-            return render(request, 'bands/bands.html', {'bands': bands})
+            context = {
+                'form': form,
+                'bands': bands,
+            }
+            return render(request, 'bands/bands.html', context)
 
         band = get_object_or_404(Band, id=id)
-        return render(request, 'bands/bands.html', {'band': band})
+        return render(request, 'bands/band.html', {'band': band})
 
     def apply_filters(self, bands: QuerySet, filters: QueryDict) -> QuerySet:
         city_id = filters.get('city')
