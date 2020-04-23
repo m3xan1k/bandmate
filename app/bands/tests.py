@@ -12,7 +12,7 @@ from bands.models import (
 )
 from bands.views import (
     UserDashboardView, ProfileEditView, MusiciansView, BandsDashboardView,
-    BandEditView,
+    BandEditView, BandsView,
 )
 from users.views import LogInView, LogOutView
 
@@ -126,6 +126,14 @@ class TestBandsModels(TestCase):
         Musician.objects.all().delete()
         Band.objects.all().delete()
         Style.objects.all().delete()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        BandFactory.reset_sequence()
+        CityFactory.reset_sequence()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        InstrumentFactory.reset_sequence()
+        InstrumentCategoryFactory.reset_sequence()
 
     @staticmethod
     def test_stringify():
@@ -183,7 +191,7 @@ class TestBandsModels(TestCase):
         self.assertEqual(style_0.bands.count(), 1)
         self.assertEqual(style_0.bands.first().name, 'band_0')
 
-    def test_bands_creatinon(self):
+    def test_bands_creation(self):
         self.assertEqual(Band.objects.count(), 2)
         band_1 = Band.objects.filter(name='band_1').first()
         self.assertEqual(band_1.admin.username, 'user_2')
@@ -349,6 +357,14 @@ class TestMusiciansViews(TestCase):
         Musician.objects.all().delete()
         Band.objects.all().delete()
         Style.objects.all().delete()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        BandFactory.reset_sequence()
+        CityFactory.reset_sequence()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        InstrumentFactory.reset_sequence()
+        InstrumentCategoryFactory.reset_sequence()
 
     def setUp(self):
         # to reset django cache
@@ -422,7 +438,7 @@ class TestMusiciansViews(TestCase):
             self.assertTrue(musician.is_busy)
 
 
-class TestBandsViews(TestCase):
+class TestBandAdminViews(TestCase):
 
     MUSICIANS_URL = reverse(MusiciansView.name)
     BANDS_DASHBOARD_URL = reverse(BandsDashboardView.name)
@@ -466,6 +482,14 @@ class TestBandsViews(TestCase):
         Musician.objects.all().delete()
         Band.objects.all().delete()
         Style.objects.all().delete()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        BandFactory.reset_sequence()
+        CityFactory.reset_sequence()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        InstrumentFactory.reset_sequence()
+        InstrumentCategoryFactory.reset_sequence()
 
     def setUp(self):
         # to reset django cache
@@ -560,3 +584,77 @@ class TestBandsViews(TestCase):
         response: HttpResponse = self.client.delete(f'{self.BAND_EDIT_URL}{band_1.id + 5}/')
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, '404.html')
+
+
+class TestBandsView(TestCase):
+
+    BANDS_URL = reverse(BandsView.name)
+
+    @classmethod
+    def setUpClass(cls):
+        user = UserFactory.create()
+        user.set_password(user.password)
+        user.save()
+        styles = StyleFactory.create_batch(size=2)
+        cities = CityFactory.create_batch(size=2)
+        bands = BandFactory.create_batch(size=4, admin=user)
+
+        for band in bands[:2]:
+            band.styles.add(styles[0])
+            band.city = cities[0]
+            band.save()
+
+        for band in bands[2:]:
+            band.styles.add(styles[1])
+            band.city = cities[1]
+            band.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        User.objects.all().delete()
+        City.objects.all().delete()
+        Musician.objects.all().delete()
+        Band.objects.all().delete()
+        Style.objects.all().delete()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        BandFactory.reset_sequence()
+        CityFactory.reset_sequence()
+        StyleFactory.reset_sequence()
+        UserFactory.reset_sequence()
+        InstrumentFactory.reset_sequence()
+        InstrumentCategoryFactory.reset_sequence()
+
+    def test_bands_list_view(self):
+        response: HttpResponse = self.client.get(self.BANDS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bands/bands.html')
+        bands: QuerySet = response.context[0].get('bands')
+        self.assertEqual(bands.count(), 4)
+
+    def test_band_detail_view(self):
+        band = Band.objects.last()
+        response: HttpResponse = self.client.get(f'{self.BANDS_URL}{band.id}/')
+        self.assertEqual(response.status_code, 200)
+        context_band: Band = response.context[0].get('band')
+        self.assertEqual(band, context_band)
+
+        response: HttpResponse = self.client.get(f'{self.BANDS_URL}{band.id + 5}/')
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, '404.html')
+
+    def test_bands_filters(self):
+        city = City.objects.first()
+        response: HttpResponse = self.client.get(f'{self.BANDS_URL}?city={city.id}')
+        self.assertTemplateUsed(response, 'bands/bands.html')
+        bands: QuerySet = response.context[0].get('bands')
+        self.assertEqual(bands.count(), 2)
+        self.assertEqual(bands.order_by('id').all()[0].name, 'band_0')
+        self.assertEqual(bands.order_by('id').all()[1].name, 'band_1')
+
+        style = Style.objects.last()
+        response: HttpResponse = self.client.get(f'{self.BANDS_URL}?style={style.id}')
+        bands: QuerySet = response.context[0].get('bands')
+        self.assertEqual(bands.count(), 2)
+        self.assertEqual(bands.order_by('id').all()[0].name, 'band_2')
+        self.assertEqual(bands.order_by('id').all()[1].name, 'band_3')

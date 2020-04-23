@@ -164,3 +164,32 @@ class BandEditView(LoginRequiredMixin, View):
         band.delete()
         messages.info(request, 'Band deleted')
         return redirect(BandsDashboardView.name)
+
+
+class BandsView(View):
+
+    name = 'bands'
+
+    def get(self, request: HttpRequest, id: Union[int, str] = None) -> TemplateResponse:
+        if id is None:
+            bands = Band.objects.all()
+            '''Check filters'''
+            if request.GET:
+                bands = self.apply_filters(bands, request.GET)
+
+            return render(request, 'bands/bands.html', {'bands': bands})
+
+        band = get_object_or_404(Band, id=id)
+        return render(request, 'bands/bands.html', {'band': band})
+
+    def apply_filters(self, bands: QuerySet, filters: QueryDict) -> QuerySet:
+        city_id = filters.get('city')
+        style_id = filters.get('style')
+
+        if city_id:
+            bands = bands.filter(city_id=city_id).all()
+
+        if style_id:
+            bands = bands.filter(styles__in=[style_id]).all()
+
+        return bands

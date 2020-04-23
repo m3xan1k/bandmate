@@ -15,4 +15,6 @@ urlpatterns = [
          name=views.BandsDashboardView.name),
     path('band_edit/', views.BandEditView.as_view(), name=views.BandEditView.name),
     path('band_edit/<int:id>/', views.BandEditView.as_view(), name=views.BandEditView.name),
+    path('bands/', views.BandsView.as_view(), name=views.BandsView.name),
+    path('bands/<int:id>/', views.BandsView.as_view(), name=views.BandsView.name),
 ]
