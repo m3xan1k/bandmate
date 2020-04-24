@@ -1,4 +1,4 @@
-name: Docker image CI
+name: Docker Image CI
 
 on: [push, pull_request]
 
