@@ -91,8 +91,7 @@ class Band(models.Model):
     description = models.TextField(blank=True)
     city = models.ForeignKey('City', on_delete=models.SET_NULL,
                              related_name='bands', null=True)
-    musicians = models.ManyToManyField('Musician', related_name='bands',
-                                       db_table='bands_musician_bands')
+    musicians = models.ManyToManyField('Musician', related_name='bands')
 
     def __str__(self):
         return f'{self.name}'
