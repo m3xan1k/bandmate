@@ -6,26 +6,25 @@ jobs:
     build:
         name: Build Docker Images
         runs-on: ubuntu-latest
+        env:
+          DEBUG: ${{ secrets.DEBUG }}
+          DJANGO_ALLOWED_HOSTS: ${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          SQL_ENGINE: ${{ secrets.SQL_ENGINE }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          DATABASE: ${{ secrets.DATABASE }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         steps:
           - name: Checkout master
             uses: actions/checkout@v1
-          - name: Setup environment
-            env:
-              DEBUG: ${{ secrets.DEBUG }}
-              DJANGO_ALLOWED_HOSTS: ${{ secrets.DJANGO_ALLOWED_HOSTS }}
-              POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-              POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-              POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-              SQL_ENGINE: ${{ secrets.SQL_ENGINE }}
-              POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-              POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-              DATABASE: ${{ secrets.DATABASE }}
-              EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-              EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-              EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-              EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-              DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
-              SECRET_KEY: ${{ secrets.SECRET_KEY }}
           - name: Build docker-compose stack
             run: docker-compose up -d
           - name: Check running containers
