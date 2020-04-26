@@ -8,9 +8,6 @@ class Category(models.TextChoices):
     LOOKING_FOR_WORK = 'LOOKING_FOR_WORK', 'Looking for work'
     WORK_IS_LOOKING = 'WORK_IS_LOOKING', 'Work is looking'
 
-    class Meta:
-        verbose_name_plural = 'Categories'
-
 
 class Announcement(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE,
