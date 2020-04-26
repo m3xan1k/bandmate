@@ -2,26 +2,14 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class AnnouncementCategory(models.Model):
-    BAND_IS_LOOKING = 'band_is_looking'
-    MUSICIAN_IS_LOOKING = 'musician_is_looking'
-    LOOKING_FOR_WORK = 'looking_for_work'
-    WORK_IS_LOOKING = 'work_is_looking'
+class Category(models.TextChoices):
+    BAND_IS_LOOKING = 'BAND_IS_LOOKING', 'Band is looking for mate'
+    MUSICIAN_IS_LOOKING = 'MUSICIAN_IS_LOOKING', 'Musician is looking for mates'
+    LOOKING_FOR_WORK = 'LOOKING_FOR_WORK', 'Looking for work'
+    WORK_IS_LOOKING = 'WORK_IS_LOOKING', 'Work is looking'
 
-    NAME = [
-        (BAND_IS_LOOKING, _('Band is looking for mate')),
-        (MUSICIAN_IS_LOOKING, _('Musician is looking for mates')),
-        (LOOKING_FOR_WORK, _('Looking for work')),
-        (WORK_IS_LOOKING, _('Work for musicians')),
-    ]
-
-    name = models.CharField(choices=NAME, default=BAND_IS_LOOKING)
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return f'<AnnouncementCategory name: {self.name}>'
+    class Meta:
+        verbose_name_plural = 'Categories'
 
 
 class Announcement(models.Model):
@@ -29,7 +17,8 @@ class Announcement(models.Model):
                                related_name='announcements')
     title = models.TextField()
     text = models.TextField()
-    category = models.ForeignKey('AnnouncementCategory', related_name='announcements')
+    category = models.CharField(max_length=50, choices=Category.choices,
+                                default=Category.BAND_IS_LOOKING)
 
     def __str__(self):
         return self.title
