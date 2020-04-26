@@ -1,20 +1,13 @@
-{% extends "base.html" %}
+{% extends "bands/settings.html" %}
 
 {% block title %}
 {{ block.super }} | Dashboard
 {% endblock title %}
 
-{% block content %}
+{% block h1 %}Dashboard{% endblock h1 %}
 
-<h1 class="text-center mb-5">Dashboard</h1>
+{% block settings %}
 
-<div class="row">
-
-<div class="col-3">
-  {% include "partials/user_dashboard_menu.html" %}
-</div>
-
-<div class="col-6 mb-5 mx-auto justify-content-center">
 <table class="table table-borderless">
   <tbody>
     <tr>
@@ -70,7 +63,4 @@
   </tbody>
 </table>
 
-</div>
-</div>
-
-{% endblock content %}
+{% endblock settings %}

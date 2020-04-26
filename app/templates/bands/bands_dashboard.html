@@ -1,21 +1,16 @@
-{% extends "base.html" %}
+{% extends "bands/settings.html" %}
 {% load method_override %}
 
 {% block title %}
 {{ block.super }} | Bands dashboard
 {% endblock title %}
 
-{% block content %}
+{% block h1 %}
+Bands
+{% endblock h1 %}
 
-<h1 class="text-center mb-5">Bands</h1>
+{% block settings %}
 
-<div class="row mb-5">
-
-<div class="col-3">
-    {% include "partials/user_dashboard_menu.html" %}
-</div>
-
-<div class="col-6 mb-5 mx-auto justify-content-center">
     {% for band in bands %}
         <table class="table table-borderless mb-5">
             <tbody>
@@ -44,8 +39,4 @@
 
     <a href="{% url 'band_edit' %}" class="btn bg-orange mybtn">Create new band</a>
 
-</div>
-
-</div>
-
-{% endblock content %}
+{% endblock settings %}
