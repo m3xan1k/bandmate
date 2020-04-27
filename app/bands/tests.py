@@ -569,6 +569,30 @@ class TestBandAdminViews(TestCase):
         self.assertEqual(bands.count(), 2)
         self.assertEqual(bands[1].name, 'new_band')
 
+    def test_band_put(self):
+        band_0 = Band.objects.filter(name='band_0').first()
+        band_data = {
+            'name': 'band_0_edited',
+            'musicians': [auth.get_user(self.client).id],
+            'description': 'edited',
+        }
+
+        header = {'HTTP_X_HTTP_METHOD_OVERRIDE': 'PUT'}
+        response: HttpResponse = self.client.post(f'{self.BAND_EDIT_URL}{band_0.id}/',
+                                                  data=band_data,
+                                                  **header)
+        self.assertRedirects(response, self.BANDS_DASHBOARD_URL)
+
+        band_0_edited = Band.objects.filter(name='band_0_edited').first()
+        self.assertIsNotNone(band_0_edited)
+        self.assertEqual(band_0_edited.description, 'edited')
+        self.assertEqual(band_0_edited.musicians.first(), auth.get_user(self.client).musician)
+
+        response: HttpResponse = self.client.post(f'{self.BAND_EDIT_URL}{band_0.id + 5}/',
+                                                  data=band_data,
+                                                  **header)
+        self.assertEqual(response.status_code, 404)
+
     def test_band_delete(self):
         band_0 = Band.objects.filter(name='band_0').first()
         response: HttpResponse = self.client.delete(f'{self.BAND_EDIT_URL}{band_0.id}/')
