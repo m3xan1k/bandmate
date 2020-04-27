@@ -29,6 +29,7 @@ class Announcement(models.Model):
     category = models.CharField(max_length=50, choices=Category.choices,
                                 default=Category.BAND_IS_LOOKING)
     updated_at = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = models.Manager()

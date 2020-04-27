@@ -1,1 +1,45 @@
 {% extends "settings.html" %}
+{% load method_override %}
+
+{% block title %}
+{{ block.super }} | Announcements Dashboard
+{% endblock title %}
+
+{% block h1 %}
+Announcements Dashboard
+{% endblock h1 %}
+
+{% block settings %}
+
+
+<table class="table table-borderless">
+    <tbody>
+        {% for announcement in announcements %}
+            <tr>
+                <td>{{ announcement.title }}</td>
+                <td>
+                    <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
+                        {% csrf_token %}
+                        {% method_override 'PUT' %}
+                        <input type="submit" value="Update" class="btn bg-middle-blue mybtn">
+                    </form>
+                </td>
+                <td>
+                    <a class="btn bg-yellow dark-blue mybtn" href="{% url 'announcement_edit' announcement.id %}">
+                        Edit
+                    </a>
+                </td>
+                <td>
+                    <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
+                        {% csrf_token %}
+                        {% method_override 'DELETE' %}
+                        <input type="submit" value="Delete" class="btn bg-orange mybtn">
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock settings %}
