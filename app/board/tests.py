@@ -183,3 +183,24 @@ class BoardTest(TestCase):
             .filter(author=user_0)
         )
         self.assertEqual(announcements.count(), 1)
+
+    def test_404_edit_announcement(self):
+        announcement = Announcement.objects.filter(author=auth.get_user(self.client)).first()
+
+        response: HttpResponse = self.client.get(
+            f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id + 5}/'
+        )
+        self.assertEqual(response.status_code, 404)
+
+        header = {'HTTP_X_HTTP_METHOD_OVERRIDE': 'PUT'}
+        response: HttpResponse = self.client.put(
+            f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id + 5}/',
+            data={},
+            header=header,
+        )
+        self.assertEqual(response.status_code, 404)
+
+        response: HttpResponse = self.client.delete(
+            f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id + 5}/'
+        )
+        self.assertEqual(response.status_code, 404)
