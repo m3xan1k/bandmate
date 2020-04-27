@@ -1,1 +1,31 @@
 {% extends "settings.html" %}
+{% load method_override %}
+
+{% block title %}
+{{ block.super }} | Edit announcement
+{% endblock title %}
+
+{% block h1 %}
+Edit your announcement
+{% endblock h1 %}
+
+{% block settings %}
+
+<form action="." method="post">
+
+    {% for field in form %}
+        <div class="form-group">
+            {{ field.label }}
+            {{ field }}
+        </div>
+    {% endfor %}
+    {% csrf_token %}
+
+    {% if request.resolver_match.kwargs.id %}
+        {% method_override 'PUT'%}
+    {% endif %}
+    <input type="submit" value="Save" class="btn bg-middle-blue mybtn">
+
+</form>
+
+{% endblock settings %}

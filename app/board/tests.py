@@ -69,6 +69,27 @@ class BoardTest(TestCase):
         self.assertEqual(announcements.count(), 1)
         self.assertEqual(announcements.first().title, 'announcement_0')
 
+        announcement_2 = Announcement.objects.create(
+            author=auth.get_user(self.client),
+            title='announcement_2',
+            text='text_2',
+            category=Category.MUSICIAN_IS_LOOKING,
+        )
+        announcement_2.updated_at = timezone.now() - timedelta(days=35)
+        announcement_2.save()
+
+        response: HttpResponse = self.client.get(
+            self.ANNOUNCEMENT_DASHBOARD_URL + '?active=1')
+        announcements = response.context[0].get('announcements')
+        self.assertEqual(announcements.count(), 1)
+        self.assertEqual(announcements.first().title, 'announcement_0')
+
+        response: HttpResponse = self.client.get(
+            self.ANNOUNCEMENT_DASHBOARD_URL + '?archived=1')
+        announcements = response.context[0].get('announcements')
+        self.assertEqual(announcements.count(), 1)
+        self.assertEqual(announcements.first().title, 'announcement_2')
+
         self.client.logout()
         response: HttpResponse = self.client.get(self.ANNOUNCEMENT_DASHBOARD_URL)
         self.assertRedirects(response,

@@ -6,40 +6,43 @@
 {% endblock title %}
 
 {% block h1 %}
-Announcements Dashboard
+Announcements
 {% endblock h1 %}
 
 {% block settings %}
 
+        <div class="text-center mb-5">
+            <a href="./?active=1" class="btn bg-middle-blue mybtn"><span class="badge">Active</span></a>
+            <a href="./?archived=1" class="btn bg-middle-blue mybtn"><span class="badge">Archived</span></a>
+        </div>
 
-<table class="table table-borderless">
-    <tbody>
         {% for announcement in announcements %}
-            <tr>
-                <td>{{ announcement.title }}</td>
-                <td>
+        <div class="card">
+            <div class="row align-items-center">
+                <div class="col-6">
+                    <h5 class="card-title text-center">{{ announcement.title|truncatewords:5 }}</h5>
+                </div>
+                <div class="col-6">
                     <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
                         {% csrf_token %}
                         {% method_override 'PUT' %}
-                        <input type="submit" value="Update" class="btn bg-middle-blue mybtn">
+                        <input type="submit" value="Renew" class="btn bg-middle-blue mybtn btn-block">
                     </form>
-                </td>
-                <td>
-                    <a class="btn bg-yellow dark-blue mybtn" href="{% url 'announcement_edit' announcement.id %}">
+
+
+                    <a class="btn bg-yellow dark-blue mybtn btn-block" href="{% url 'announcement_edit' announcement.id %}">
                         Edit
                     </a>
-                </td>
-                <td>
+
                     <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
                         {% csrf_token %}
                         {% method_override 'DELETE' %}
-                        <input type="submit" value="Delete" class="btn bg-orange mybtn">
+                        <input type="submit" value="Delete" class="btn bg-orange mybtn btn-block">
                     </form>
-                </td>
-            </tr>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-    </tbody>
-</table>
 
 
 {% endblock settings %}

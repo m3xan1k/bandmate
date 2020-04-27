@@ -22,8 +22,23 @@ class AnnouncementDashboardView(LoginRequiredMixin, View):
 
     def get(self, request: HttpRequest) -> Union[TemplateResponse, HttpResponseRedirect]:
         announcements = Announcement.objects.filter(author=request.user).all()
+        if request.GET:
+            announcements = self.apply_filters(announcements, request.GET)
         return render(request, 'board/announcements_dashboard.html',
                       {'announcements': announcements})
+
+    def apply_filters(self, announcements: QuerySet, filters: QueryDict) -> QuerySet:
+        active = filters.get('active')
+        archived = filters.get('archived')
+
+        due_date = timezone.now() - timedelta(days=30)
+
+        if active:
+            announcements = announcements.filter(updated_at__gt=due_date).all()
+        if archived:
+            announcements = announcements.filter(updated_at__lt=due_date).all()
+
+        return announcements
 
 
 class AnnouncementEditView(LoginRequiredMixin, View):
