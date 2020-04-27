@@ -17,7 +17,7 @@ Announcements
         </div>
 
         {% for announcement in announcements %}
-        <div class="card">
+        <div class="card mb-5">
             <div class="row align-items-center">
                 <div class="col-6">
                     <h5 class="card-title text-center">{{ announcement.title|truncatewords:5 }}</h5>
@@ -43,6 +43,10 @@ Announcements
             </div>
         </div>
         {% endfor %}
+
+        <a class="btn bg-orange dark-blue mybtn btn-block mb-5" href="{% url 'announcement_edit' %}">
+            Create new announcement
+        </a>
 
 
 {% endblock settings %}

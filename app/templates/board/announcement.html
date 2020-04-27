@@ -7,6 +7,18 @@
 
 {% block content %}
 
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'announcements' %}">Announcements</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ announcement.title|truncatewords:5 }}</li>
+        </ol>
+    </nav>
+
     <h1 class="text-center mb-5">{{ announcement.title }}</h1>
+
+    <p>{{ announcement.text }}</p>
+
+    <h6>{{ announcement.author }}</h6>
+    <h6>{{ announcement.created_at.date }}</h6>
 
 {% endblock content %}

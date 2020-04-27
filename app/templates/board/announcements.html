@@ -7,6 +7,41 @@
 
 {% block content %}
 
+    <form action="." method="get" class="form-inline mb-5 justify-content-center">
+
+        {% for field in form %}
+            <span class="mx-3">{{ field.label }}</span>
+            {{ field }}
+        {% endfor %}
+
+        <input type="submit" value="Search" class="btn bg-middle-blue mybtn mx-3">
+    </form>
+
     <h1 class="text-center mb-5">Announcements</h1>
+
+    <div class="col-8 justify-content-center mx-auto mb-5">
+
+    {% for announcement in announcements %}
+    
+        
+            <div class="card mb-5">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-3">
+                            <img src="..." class="round" alt="...">
+                        </div>
+                        <div class="col-9">
+                            <h5 class="card-title">{{ announcement.title|truncatewords:10 }}</h5>
+                            <h6>Author: {{ announcement.author }}</h5>
+                            <h6>Created: {{ announcement.created_at.date }}</h6>
+                            <a href="{% url 'announcements' announcement.id %}" class="btn bg-middle-blue mybtn">See detail</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    {% endfor %}
+
+    </div>
 
 {% endblock content %}
