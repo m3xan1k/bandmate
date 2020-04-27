@@ -12,3 +12,7 @@ class AnnouncementEditForm(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = ('title', 'text', 'category')
+
+
+class AnnouncementFilterForm(forms.Form):
+    category = forms.ChoiceField(widget=forms.Select(), choices=Category.choices)

@@ -1,18 +1,22 @@
+from datetime import timedelta
+
 from django.shortcuts import reverse
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib import auth
+from django.utils import timezone
 
 from board.models import Category, Announcement
 from users.views import LogInView
-from board.views import AnnouncementDashboardView, AnnouncementEditView
+from board.views import AnnouncementDashboardView, AnnouncementEditView, AnnouncementsView
 
 
 class BoardTest(TestCase):
 
     ANNOUNCEMENT_DASHBOARD_URL = reverse(AnnouncementDashboardView.name)
     ANNOUNCEMENT_EDIT_URL = reverse(AnnouncementEditView.name)
+    ANNOUNCEMENTS_URL = reverse(AnnouncementsView.name)
     LOGIN_URL = reverse(LogInView.name)
 
     def setUp(self):
@@ -113,8 +117,8 @@ class BoardTest(TestCase):
 
     def test_put_edit_announcement(self):
         new_data = {
-            'title': 'updated',
-            'text': 'updated',
+            'title': 'edited',
+            'text': 'edited',
             'category': Category.BAND_IS_LOOKING,
         }
         announcement = Announcement.objects.filter(author=auth.get_user(self.client)).first()
@@ -128,7 +132,25 @@ class BoardTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         announcement = Announcement.objects.filter(author=auth.get_user(self.client)).first()
-        self.assertEqual(announcement.title, 'updated')
+        self.assertEqual(announcement.title, 'edited')
+
+        frozen_update = announcement.updated_at
+        response: HttpResponse = self.client.post(
+            f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id}/?update=1',
+            **header,
+        )
+        announcement = Announcement.objects.filter(author=auth.get_user(self.client)).first()
+        self.assertEqual(frozen_update, announcement.updated_at)
+
+        announcement.updated_at = timezone.now() - timedelta(hours=5)
+        announcement.save()
+        response: HttpResponse = self.client.post(
+            f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id}/?update=1',
+            **header,
+        )
+        announcement = Announcement.objects.filter(author=auth.get_user(self.client)).first()
+        self.assertNotEqual(frozen_update, announcement.updated_at)
+        self.assertLess(frozen_update, announcement.updated_at)
 
     def test_put_edit_announcement_another_user(self):
         user_0 = auth.get_user(self.client)
@@ -204,3 +226,44 @@ class BoardTest(TestCase):
             f'{self.ANNOUNCEMENT_EDIT_URL}{announcement.id + 5}/'
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_announcement_list(self):
+        response: HttpResponse = self.client.get(self.ANNOUNCEMENTS_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'board/announcements.html')
+
+        announcements = response.context[0].get('announcements')
+        self.assertEqual(announcements.count(), 2)
+
+        announcement_0 = Announcement.objects.first()
+        announcement_0.updated_at = timezone.now() - timedelta(days=31)
+        announcement_0.save()
+
+        response: HttpResponse = self.client.get(self.ANNOUNCEMENTS_URL)
+        announcements = response.context[0].get('announcements')
+        self.assertEqual(announcements.count(), 1)
+
+    def test_announcement_detail(self):
+        announcement_1 = Announcement.objects.last()
+        response: HttpResponse = self.client.get(
+            f'{self.ANNOUNCEMENTS_URL}{announcement_1.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'board/announcement.html')
+
+        response: HttpResponse = self.client.get(
+            f'{self.ANNOUNCEMENTS_URL}{announcement_1.id + 5}/')
+        self.assertEqual(response.status_code, 404)
+
+        response: HttpResponse = self.client.get(
+            f'{self.ANNOUNCEMENTS_URL}asdf/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_announcement_category_filter(self):
+        response: HttpResponse = self.client.get(
+            f'{self.ANNOUNCEMENTS_URL}?category=WORK_IS_LOOKING')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'board/announcements.html')
+
+        announcements = response.context[0].get('announcements')
+        self.assertEqual(announcements.count(), 1)
+        self.assertEqual(announcements.first().category, Category.WORK_IS_LOOKING)

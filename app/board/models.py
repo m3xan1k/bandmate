@@ -1,5 +1,17 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import User
+
+
+class ActiveAnnouncementManager(models.Manager):
+    def get_queryset(self):
+        due_date = timezone.now() - timedelta(days=30)
+        return (
+            super(ActiveAnnouncementManager, self).get_queryset()
+            .filter(updated_at__gt=due_date)
+        )
 
 
 class Category(models.TextChoices):
@@ -16,9 +28,14 @@ class Announcement(models.Model):
     text = models.TextField()
     category = models.CharField(max_length=50, choices=Category.choices,
                                 default=Category.BAND_IS_LOOKING)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = models.Manager()
+    active = ActiveAnnouncementManager()
 
     def __str__(self):
         return self.title
 
     def __repr__(self):
-        return f'<Announcement author: {self.author} title: {self.name}>'
+        return f'<Announcement author: {self.author} title: {self.title}>'
