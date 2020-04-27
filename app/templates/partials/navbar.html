@@ -7,15 +7,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-                <li class="nav-item {% if request.resolver_match.url_name == 'musicians' %}active{% endif %}">
-                    <a class="nav-link" href="{% url 'musicians' %}">Musicians</a>
-                </li>
-                <li class="nav-item {% if request.resolver_match.url_name == 'bands' %}active{% endif %}">
-                    <a class="nav-link" href="{% url 'bands' %}">Bands</a>
-                </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <a href="{% url 'user_dashboard' %}" class="nav-link">Dashboard</a>
+                    <a href="{% url 'user_dashboard' %}" class="nav-link">Account</a>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'logout' %}" class="nav-link">LogOut</a>
@@ -28,6 +22,15 @@
                     <a class="nav-link" href="{% url 'signup' %}">SignUp</a>
                 </li>
                 {% endif %}
+                <li class="nav-item {% if request.resolver_match.url_name == 'musicians' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'musicians' %}">Musicians</a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'bands' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'bands' %}">Bands</a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}">
+                    <a class="nav-link" href="{% url 'announcements' %}">Board</a>
+                </li>
             </ul>
         </div>
     </div>

@@ -1,0 +1,52 @@
+{% extends "settings.html" %}
+{% load method_override %}
+
+{% block title %}
+{{ block.super }} | Announcements Dashboard
+{% endblock title %}
+
+{% block h1 %}
+Announcements
+{% endblock h1 %}
+
+{% block settings %}
+
+        <div class="text-center mb-5">
+            <a href="./?active=1" class="btn bg-middle-blue mybtn"><span class="badge">Active</span></a>
+            <a href="./?archived=1" class="btn bg-middle-blue mybtn"><span class="badge">Archived</span></a>
+        </div>
+
+        {% for announcement in announcements %}
+        <div class="card mb-5">
+            <div class="row align-items-center">
+                <div class="col-6">
+                    <h5 class="card-title text-center">{{ announcement.title|truncatewords:5 }}</h5>
+                </div>
+                <div class="col-6">
+                    <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
+                        {% csrf_token %}
+                        {% method_override 'PUT' %}
+                        <input type="submit" value="Renew" class="btn bg-middle-blue mybtn btn-block">
+                    </form>
+
+
+                    <a class="btn bg-yellow dark-blue mybtn btn-block" href="{% url 'announcement_edit' announcement.id %}">
+                        Edit
+                    </a>
+
+                    <form class="form-inline" action="{% url 'announcement_edit' announcement.id %}?update=1" method="post">
+                        {% csrf_token %}
+                        {% method_override 'DELETE' %}
+                        <input type="submit" value="Delete" class="btn bg-orange mybtn btn-block">
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <a class="btn bg-orange dark-blue mybtn btn-block mb-5" href="{% url 'announcement_edit' %}">
+            Create new announcement
+        </a>
+
+
+{% endblock settings %}

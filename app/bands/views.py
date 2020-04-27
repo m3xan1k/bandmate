@@ -8,10 +8,10 @@ from django.views import View
 from django.contrib import messages
 from django.db.models.query import QuerySet
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import PermissionDenied
 
 from bands.forms import MusicianProfileForm, MusicianFilterForm, BandEditForm, BandFilterForm
 from bands.models import Musician, Instrument, Band
+from helpers.authority import check_user
 
 
 class HomeView(View):
@@ -116,6 +116,7 @@ class BandEditView(LoginRequiredMixin, View):
     login_url = '/users/login/'
     form = BandEditForm
 
+    @check_user(model=Band, attribute='admin')
     def get(self, request: HttpRequest, id: Union[str, int] = None) -> TemplateResponse:
         '''If requested new band creation'''
         if id is None:
@@ -124,8 +125,8 @@ class BandEditView(LoginRequiredMixin, View):
 
         '''Check if band exists and correct user trying to edit band'''
         band = get_object_or_404(Band, id=id)
-        if not band.admin == request.user:
-            raise PermissionDenied
+        # if not band.admin == request.user:
+        #     raise PermissionDenied
         form = self.form(instance=band)
         return render(request, 'bands/band_edit.html', {'form': form})
 
@@ -144,12 +145,10 @@ class BandEditView(LoginRequiredMixin, View):
             return redirect(BandsDashboardView.name)
         return render(request, 'bands/band_edit.html', {'form': form})
 
+    @check_user(model=Band, attribute='admin')
     def put(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
         '''edit existed record'''
-        print(request.POST)
         band = get_object_or_404(Band, id=id)
-        if not band.admin == request.user:
-            raise PermissionDenied
         form = self.form(request.POST, instance=band)
         if form.is_valid():
             band = form.save()
@@ -157,10 +156,9 @@ class BandEditView(LoginRequiredMixin, View):
             return redirect(BandsDashboardView.name)
         return render(request, 'bands/band_edit.html', {'form': form})
 
+    @check_user(model=Band, attribute='admin')
     def delete(self, request: HttpRequest, id: Union[str, int]) -> HttpResponseRedirect:
         band = get_object_or_404(Band, id=id)
-        if not band.admin == request.user:
-            raise PermissionDenied
         band.delete()
         messages.info(request, 'Band deleted')
         return redirect(BandsDashboardView.name)

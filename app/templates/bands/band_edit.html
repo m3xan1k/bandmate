@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "settings.html" %}
 
 {% load method_override %}
 
@@ -6,27 +6,12 @@
 {{ block.super }} | Band edit
 {% endblock title %}
 
-{% block content %}
+{% block h1 %}
+Edit your band
+{% endblock h1 %}
 
-    <h1 class="text-center mb-5">Edit your band</h1>
+{% block settings %}
 
-    {% if form.errors %}
-        {% for field in form %}
-            {% for error in field.errors %}
-                <div class="alert alert-danger">
-                    {{ error }}
-                </div>
-            {% endfor %}
-        {% endfor %}
-    {% endif %}
-
-    <div class="row">
-
-    <div class="col-3">
-        {% include "partials/user_dashboard_menu.html" %}
-    </div>
-
-    <div class="col-6 mb-5">
     <form action="." method="post">
     
         {% for field in form %}
@@ -42,8 +27,5 @@
         {% endif %}
     <input type="submit" value="Save band" class="btn bg-middle-blue mybtn">
     </form>
-    </div>
 
-</div>
-
-{% endblock content %}
+{% endblock settings %}
